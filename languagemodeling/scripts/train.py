@@ -14,21 +14,38 @@ import pickle
 
 from nltk.corpus import gutenberg
 
+from nltk.corpus import PlaintextCorpusReader #Para cargar el corpus
+from nltk.tokenize import RegexpTokenizer #Tokenizador
+
 from languagemodeling.ngram import NGram
 
 
 if __name__ == '__main__':
-    opts = docopt(__doc__)
+    # opts = docopt(__doc__)
 
-    # load the data
-    sents = gutenberg.sents('austen-emma.txt')
+    pattern = r'''(?ix)    # set flag to allow verbose regexps
+          (?:sr\.|sra\.)
+        | (?:[A-Z]\.)+        # abbreviations, e.g. U.S.A.
+        | \w+(?:-\w+)*        # words with optional internal hyphens
+        | \$?\d+(?:\.\d+)?%?  # currency and percentages, e.g. $12.40, 82%
+        | \.\.\.            # ellipsis
+        | [][.,;"'?():-_`]  # these are separate tokens; includes ], and the other ]
+    '''
 
-    # train the model
-    n = int(opts['-n'])
-    model = NGram(n, sents)
+    tokenizer = RegexpTokenizer(pattern)
+    corpus = PlaintextCorpusReader('.', 'mi_corpus.txt', word_tokenizer=tokenizer)
 
-    # save it
-    filename = opts['-o']
-    f = open(filename, 'wb')
-    pickle.dump(model, f)
-    f.close()
+    print (corpus.sents()[:10])
+
+    # # load the data
+    # sents = gutenberg.sents('austen-emma.txt')
+
+    # # train the model
+    # n = int(opts['-n'])
+    # model = NGram(n, sents)
+
+    # # save it
+    # filename = opts['-o']
+    # f = open(filename, 'wb')
+    # pickle.dump(model, f)
+    # f.close()
