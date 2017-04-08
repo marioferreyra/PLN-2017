@@ -9,15 +9,15 @@ Options:
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
-from docopt import docopt
-import pickle
+# from docopt import docopt
+# import pickle
 
-from nltk.corpus import gutenberg
+# from nltk.corpus import gutenberg
 
-from nltk.corpus import PlaintextCorpusReader #Para cargar el corpus
-from nltk.tokenize import RegexpTokenizer #Tokenizador
+from nltk.corpus import PlaintextCorpusReader  # Para cargar el corpus
+from nltk.tokenize import RegexpTokenizer  # Tokenizador
 
-from languagemodeling.ngram import NGram
+# from languagemodeling.ngram import NGram
 
 
 if __name__ == '__main__':
@@ -29,13 +29,16 @@ if __name__ == '__main__':
         | \w+(?:-\w+)*        # words with optional internal hyphens
         | \$?\d+(?:\.\d+)?%?  # currency and percentages, e.g. $12.40, 82%
         | \.\.\.            # ellipsis
-        | [][.,;"'?():-_`]  # these are separate tokens; includes ], and the other ]
+        | [][.,;"'?():-_`]  # these are separate tokens; includes ]
     '''
 
-    tokenizer = RegexpTokenizer(pattern)
-    corpus = PlaintextCorpusReader('.', 'mi_corpus.txt', word_tokenizer=tokenizer)
+    PATH = "/home/mario/Escritorio"
+    FILENAME = "mi_corpus.txt"
 
-    print (corpus.sents()[:10])
+    tokenizer = RegexpTokenizer(pattern)
+    corpus = PlaintextCorpusReader(PATH, FILENAME, word_tokenizer=tokenizer)
+
+    print(corpus.sents()[:10])
 
     # # load the data
     # sents = gutenberg.sents('austen-emma.txt')
