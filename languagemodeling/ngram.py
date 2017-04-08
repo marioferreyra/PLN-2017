@@ -45,7 +45,6 @@ class NGram(object):
             # Iteramos sobre cada palabra de la oracion
             for i in range(len(sent) - n + 1):
                 ngram = tuple(sent[i: i + n])
-                # tuplas de largo n: si n=1 => (w_i, ) o si n=2 => (w_i, w_i+1)
                 counts[ngram] += 1
                 counts[ngram[:-1]] += 1
 
@@ -64,6 +63,8 @@ class NGram(object):
         token -- the token.
         prev_tokens -- the previous n-1 tokens (optional only if n = 1).
         """
+        # Calcula lo siguiente:
+        # P(token | prev_tokens) = count(prev_tokens, token)/count(prev_tokens)
         n = self.n
 
         if not prev_tokens:
@@ -71,10 +72,12 @@ class NGram(object):
 
         assert len(prev_tokens) == n - 1
 
-        tokens = prev_tokens + [token]  # (W_i-1, W_i)
+        tokens = prev_tokens + [token]  # (prev_tokens, token)
 
-        count_tokens = float(self.counts[tuple(tokens)])  # count(W_i-1, W_i)
-        count_prev_tokens = self.counts[tuple(prev_tokens)]  # count(W_i-1)
+        # count(prev_tokens, token)
+        count_tokens = float(self.counts[tuple(tokens)])
+        # count(prev_tokens)
+        count_prev_tokens = self.counts[tuple(prev_tokens)]
 
         probability = 0
 
@@ -112,11 +115,12 @@ class NGram(object):
             # n = 2 ==> i = 1 ... m
             # n = 3 ==> i = 2 ... m
             prev_tokens = sent[i-n+1:i]
-            # Markov Assumption: [wi-n+1 ... wi-1]
+            # prev_tokens = [wi-n+1 ... wi-1]
             # n = 1 ==> [wi+0 ... wi-1] = []
             # n = 2 ==> [wi-1 ... wi-1] = [wi-1]
             # n = 3 ==> [wi-2 ... wi-1] = [wi-2 wi-1]
             probability *= self.cond_prob(token, prev_tokens)
+            # Markov Assumption = P(wi | wi-n+1 ... wi-1)
 
         return probability
 
