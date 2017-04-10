@@ -4,7 +4,7 @@ from math import log
 from random import random
 
 
-def addDelimitator(sent, n):
+def addDelimiters(sent, n):
     """
     Agrega a una oracion n-1 delimitadores <s> al comienzo y
     un delimitador </s> al final.
@@ -42,12 +42,12 @@ class NGram(object):
 
         # Iteramos sobre cada oracion del conjunto de oraciones
         for sent in sents:
-            sent = addDelimitator(sent, n)
+            sent = addDelimiters(sent, n)
             # Iteramos sobre cada palabra de la oracion
             for i in range(len(sent) - n + 1):
                 ngram = tuple(sent[i: i + n])
                 counts[ngram] += 1
-                counts[ngram[:-1]] += 1
+                counts[ngram[:-1]] += 1 # Todos menos el ultimo
 
     def count(self, tokens):
         """
@@ -97,7 +97,7 @@ class NGram(object):
         sent -- the sentence as a list of tokens.
         """
         n = self.n
-        sent = addDelimitator(sent, n)
+        sent = addDelimiters(sent, n)
         probability = 1  # Se inicializa en 1 por la productoria
         m = len(sent)  # Tamaño de la oracion
 
@@ -132,7 +132,7 @@ class NGram(object):
         sent -- the sentence as a list of tokens.
         """
         n = self.n
-        sent = addDelimitator(sent, n)
+        sent = addDelimiters(sent, n)
         probability = 0  # Se inicializa en 0 por la sumatoria de logaritmos
 
         # Iteramos sobre cada oracion del conjunto de oraciones
@@ -161,24 +161,24 @@ class NGramGenerator:
             if len(tokens) == n:
                 token = tokens[n-1]  # Tomamos el ultimo token
                 prev_tokens = tokens[:-1]  # Tomamos todos los tokens anteriores a tokens
+                # Probabilidad condicional: P(token | prev_tokens)
                 probability = model.cond_prob(token, list(prev_tokens))
                 
                 # Si el prev_tokens no esta en el diccionario lo cargamos
                 if prev_tokens not in probs:
                     probs[prev_tokens] = dict()
 
+                #Cargamos en el diccionario prev_tokens:
+                # {token : probabilidad}
+                # Donde: * token es talque: "prev_tokens, tokens"
+                #        * probabilida es talque: P(token | prev_tokens)
                 probs[prev_tokens][token] = probability
 
+        # Formamos el sorted_probs
+        # Es similar a probs, salvo que:
+        # {token : probabilidad} -->  (token, probabilidad)
         for key in probs:
-            # print("\n")
-            # print("Comun =", probs[key].items())
-            # print("Sorted =", sorted(probs[key].items()))
-            # print(key, "||", list(probs[key].items()))
-            # if sorted(probs[key].items()) == list(probs[key].items()):
-            #     print("True")
             sorted_probs[key] = sorted(probs[key].items())
-
-        # print(sorted_probs)
 
     def generate_token(self, prev_tokens=None):
         """
@@ -186,55 +186,59 @@ class NGramGenerator:
 
         prev_tokens -- the previous n-1 tokens (optional only if n = 1).
         """
-        U = random()  # Numero aleatorio entre 0 y 1
-
         n = self.n
+
         if not prev_tokens:
             prev_tokens = ()
 
         assert len(prev_tokens) == n - 1
 
-        # print(self.probs[()])
-        next_tokens = self.probs[prev_tokens]  # Posibles tokens
-        list_probs = list(next_tokens.values())  # Lista de probabilidades
+        # Obtenemos las probabilidad de los prev_tokens
+        probs_prev_tokens = self.sorted_probs[prev_tokens]
         
-        # Transformada Inversa
-        index = 0
-        accumulator = list_probs[index]
+        # *** Transformada Inversa ***
+        U = random()  # Numero aleatorio entre 0 y 1
+        index = 0  # Indice de los tokens
+        accumulator = probs_prev_tokens[index][1] # Acumula las probabilidades
+        
         # Mientras la acumulada sea menor a U, sigo acumulando valores hasta
         # que la acumulada sea mayor a la U
-        while U > accumulator:
+        while accumulator < U:
             index += 1
-            accumulator += list_probs[index]
+            accumulator += probs_prev_tokens[index][1]
 
-        random_token = self.sorted_probs[prev_tokens][index][0]
+        # Me quedo con una de las palabra
+        chosen_token = probs_prev_tokens[index][0]
 
-        return random_token
-
+        return chosen_token
 
     def generate_sent(self):
         """
         Randomly generate a sentence.
         """
-        pass
+        n = self.n
+        
+        prev_tokens = ["<s>"]*(n-1) # Delimitadores iniciales
+        final_delimiter = "</s>" # Delimitador final
 
+        my_sent = [] # La oracion que voy a formar
+        my_sent += prev_tokens # Le agregamos los delimitadores iniciales
 
+        # Generamos un posible token a partir de los prev_tokens
+        next_token = self.generate_token(tuple(prev_tokens))
 
+        # Mientras el token sea distinto de </s> generero mas oraciones
+        while next_token != final_delimiter:
+        # while (next_token, ) != tuple(final_delimiter):
+            my_sent += list((next_token, )) # Vamos armando la oracion
+            prev_tokens += list((next_token, )) # Tokens previos
+            prev_tokens = prev_tokens[1:] # Me quedo con todos menos el primero
+            next_token = self.generate_token(tuple(prev_tokens))
 
+        # Nos quedamos con la oracion sin los delimitadores iniciales
+        sent = my_sent[(n-1):]
 
-
-
-
-sents = [
-            'el gato come pescado .'.split(),
-            'la gata come salmón .'.split(),
-        ]
-
-ngram = NGram(1, sents)
-generator = NGramGenerator(ngram)
-# print(generator.generate_token(()))
-# generator.generate_sent()
-
+        return sent
 
 
 # Metodo de la Transformada Inversa
