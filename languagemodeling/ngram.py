@@ -1,6 +1,7 @@
 # https://docs.python.org/3/library/collections.html
 from collections import defaultdict
 from math import log
+from random import random
 
 
 def addDelimitator(sent, n):
@@ -142,3 +143,107 @@ class NGram(object):
             probability += log2Extended(x)
 
         return probability
+
+
+class NGramGenerator:
+
+    def __init__(self, model):
+        """
+        model -- n-gram model.
+        """
+        self.n = n = model.n  # Tamaño del N-grama
+
+        counts = model.counts
+        self.probs = probs = dict()
+        self.sorted_probs = sorted_probs = dict()
+
+        for tokens in counts.keys():
+            if len(tokens) == n:
+                token = tokens[n-1]  # Tomamos el ultimo token
+                prev_tokens = tokens[:-1]  # Tomamos todos los tokens anteriores a tokens
+                probability = model.cond_prob(token, list(prev_tokens))
+                
+                # Si el prev_tokens no esta en el diccionario lo cargamos
+                if prev_tokens not in probs:
+                    probs[prev_tokens] = dict()
+
+                probs[prev_tokens][token] = probability
+
+        for key in probs:
+            # print("\n")
+            # print("Comun =", probs[key].items())
+            # print("Sorted =", sorted(probs[key].items()))
+            # print(key, "||", list(probs[key].items()))
+            # if sorted(probs[key].items()) == list(probs[key].items()):
+            #     print("True")
+            sorted_probs[key] = sorted(probs[key].items())
+
+        # print(sorted_probs)
+
+    def generate_token(self, prev_tokens=None):
+        """
+        Randomly generate a token, given prev_tokens.
+
+        prev_tokens -- the previous n-1 tokens (optional only if n = 1).
+        """
+        U = random()  # Numero aleatorio entre 0 y 1
+
+        n = self.n
+        if not prev_tokens:
+            prev_tokens = ()
+
+        assert len(prev_tokens) == n - 1
+
+        # print(self.probs[()])
+        next_tokens = self.probs[prev_tokens]  # Posibles tokens
+        list_probs = list(next_tokens.values())  # Lista de probabilidades
+        
+        # Transformada Inversa
+        index = 0
+        accumulator = list_probs[index]
+        # Mientras la acumulada sea menor a U, sigo acumulando valores hasta
+        # que la acumulada sea mayor a la U
+        while U > accumulator:
+            index += 1
+            accumulator += list_probs[index]
+
+        random_token = self.sorted_probs[prev_tokens][index][0]
+
+        return random_token
+
+
+    def generate_sent(self):
+        """
+        Randomly generate a sentence.
+        """
+        pass
+
+
+
+
+
+
+
+
+sents = [
+            'el gato come pescado .'.split(),
+            'la gata come salmón .'.split(),
+        ]
+
+ngram = NGram(1, sents)
+generator = NGramGenerator(ngram)
+# print(generator.generate_token(()))
+# generator.generate_sent()
+
+
+
+# Metodo de la Transformada Inversa
+# u = random.random()
+# j = 1
+# f = 0.5*((float(2)/3)**j) # f = p1
+# # Mientras la acumulada sea menor a la U, sigo acumulando valores
+# # hasta que la acumulada sea mayor a la U
+# while u > f:
+#     j += 1
+#     f += 0.5*((float(2)/3)**j) # f = f + pj
+# x = j
