@@ -145,6 +145,40 @@ class NGram(object):
         return probability
 
 
+    def log_probability(self, sents):
+        """
+        Calcula el Log Probability de una serie de oraciones.
+
+        sents -- lista de oraciones.
+        """
+        prob = 0
+        for sent in sents:
+            prob += self.sent_log_prob(sent)
+
+        return prob
+
+    def cross_entropy(self, sents):
+        """
+        Calcula el Cross Entropy de una serie de oraciones.
+
+        sents -- lista de oraciones.
+        """
+        # Numero total de palabras en las oraciones (se pueden repetir)
+        count_words = 0
+        for sent in sents:
+            count_words += len(sent)
+
+        return self.log_probability(sents) / float(count_words)
+
+    def perplexity(self, sents):
+        """
+        Calcula la Perplexity de una serie de oraciones.
+
+        sents -- lista de oraciones.
+        """
+        return pow(2, -self.cross_entropy(sents))
+
+
 class NGramGenerator:
 
     def __init__(self, model):
