@@ -2,11 +2,15 @@
 Train an n-gram model.
 
 Usage:
-  train.py -n <n> -o <file>
+  train.py -n <n> [-m <model>] -o <file>
   train.py -h | --help
 
 Options:
   -n <n>        Order of the model.
+  -m <model>    Modelo a usar:
+                  [Por Defecto: ngram]
+                  ngram -- N-grama clasico
+                  addone -- Suavizado de N-grama
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
@@ -16,7 +20,7 @@ import pickle
 from nltk.corpus import PlaintextCorpusReader  # Para cargar el corpus
 from nltk.tokenize import RegexpTokenizer  # Tokenizador
 
-from languagemodeling.ngram import NGram
+from languagemodeling.ngram import NGram, AddOneNGram
 
 
 if __name__ == '__main__':
@@ -43,7 +47,13 @@ if __name__ == '__main__':
 
     # Train the model
     n = int(opts['-n'])
-    model = NGram(n, sents)
+    m = str(opts['-m']) # Tipo de modelo
+
+    # Podemos usar los N-Gramas clasicos o N-Gramas con el suavizado AddOne
+    if m == "addone":
+        model = AddOneNGram(n, sents)
+    else:
+        model = NGram(n, sents)
 
     # Save it
     filename = opts['-o']
