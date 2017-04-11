@@ -229,7 +229,6 @@ class NGramGenerator:
 
         # Mientras el token sea distinto de </s> generero mas oraciones
         while next_token != final_delimiter:
-        # while (next_token, ) != tuple(final_delimiter):
             my_sent += list((next_token, )) # Vamos armando la oracion
             prev_tokens += list((next_token, )) # Tokens previos
             prev_tokens = prev_tokens[1:] # Me quedo con todos menos el primero
@@ -251,3 +250,71 @@ class NGramGenerator:
 #     j += 1
 #     f += 0.5*((float(2)/3)**j) # f = f + pj
 # x = j
+
+def countWordsType(sents):
+    """
+    Calcula el tamaño del vocabulario (words type) de una lista de oraciones.
+    """
+    words_type = []
+    for sent in sents:
+        for token in sent:
+            if token not in words_type:
+                words_type.append(token)
+
+    return len(words_type)
+
+class AddOneNGram(NGram):
+    """
+    Heredamos de NGram para poder usar todos sus metodos.
+    """
+    # super(), es una función build-in que sirve para acceder a atributos que
+    # pertenecen a una clase superior.
+    def __init__ (self, n, sents):
+        super().__init__(n, sents) # Para poder poder usar las variables del init
+
+        # Le sumamos 1 porque se incluye el marcador </s>.
+        self.count_words_type = countWordsType(sents) + 1
+
+        # print(self.counts) #--> Ejemplo de el uso de super
+
+    def V(self):
+        """
+        Size of the vocabulary.
+        """
+        return self.count_words_type
+
+
+    def cond_prob(self, token, prev_tokens=None):
+        """
+        Conditional probability of a token.
+
+        token -- the token.
+        prev_tokens -- the previous n-1 tokens (optional only if n = 1).
+        """
+        # Calcula el Add-one estimation:
+        #                           count(prev_tokens, token) + 1
+        # P(token | prev_tokens) = -------------------------------
+        #                              count(prev_tokens) + V
+        n = self.n
+
+        if not prev_tokens:
+            prev_tokens = []
+
+        assert len(prev_tokens) == n - 1
+
+        tokens = prev_tokens + [token]  # (prev_tokens, token)
+
+        # count(prev_tokens, token) + 1
+        count_tokens = float(self.counts[tuple(tokens)]) + 1
+        # count(prev_tokens) + V
+        count_prev_tokens = self.counts[tuple(prev_tokens)] + self.V()
+
+        probability = 0
+
+        # En el caso de que count(prev_tokens) = 0
+        # Tomamos la probabilidad como 0 (por la division por 0)
+
+        if count_prev_tokens != 0:
+            probability = count_tokens / count_prev_tokens
+
+        return probability
