@@ -47,7 +47,7 @@ class NGram(object):
             for i in range(len(sent) - n + 1):
                 ngram = tuple(sent[i: i + n])
                 counts[ngram] += 1
-                counts[ngram[:-1]] += 1 # Todos menos el ultimo
+                counts[ngram[:-1]] += 1  # Todos menos el ultimo
 
     def count(self, tokens):
         """
@@ -144,7 +144,6 @@ class NGram(object):
 
         return probability
 
-
     def log_probability(self, sents):
         """
         Calcula el Log Probability de una serie de oraciones.
@@ -193,16 +192,16 @@ class NGramGenerator:
 
         for tokens in counts.keys():
             if len(tokens) == n:
-                token = tokens[n-1]  # Tomamos el ultimo token
-                prev_tokens = tokens[:-1]  # Tomamos todos los tokens anteriores a tokens
+                token = tokens[n-1]  # El ultimo token
+                prev_tokens = tokens[:-1]  # Todos los tokens previos a tokens
                 # Probabilidad condicional: P(token | prev_tokens)
                 probability = model.cond_prob(token, list(prev_tokens))
-                
+
                 # Si el prev_tokens no esta en el diccionario lo cargamos
                 if prev_tokens not in probs:
                     probs[prev_tokens] = dict()
 
-                #Cargamos en el diccionario prev_tokens:
+                # Cargamos en el diccionario prev_tokens:
                 # {token : probabilidad}
                 # Donde: * token es talque: "prev_tokens, tokens"
                 #        * probabilida es talque: P(token | prev_tokens)
@@ -229,12 +228,12 @@ class NGramGenerator:
 
         # Obtenemos los prev_tokens con sus probabilidades
         probs_prev_tokens = self.sorted_probs[prev_tokens]
-        
+
         # *** Transformada Inversa ***
         U = random()  # Numero aleatorio entre 0 y 1
         index = 0  # Indice de los tokens
-        accumulator = probs_prev_tokens[index][1] # Acumula las probabilidades
-        
+        accumulator = probs_prev_tokens[index][1]  # Acumula las probabilidades
+
         # Mientras la acumulada sea menor a U, sigo acumulando valores hasta
         # que la acumulada sea mayor a la U
         while accumulator < U:
@@ -253,21 +252,21 @@ class NGramGenerator:
         Randomly generate a sentence.
         """
         n = self.n
-        
-        prev_tokens = ["<s>"]*(n-1) # Delimitadores iniciales
-        final_delimiter = "</s>" # Delimitador final
 
-        my_sent = [] # La oracion que voy a formar
-        my_sent += prev_tokens # Le agregamos los delimitadores iniciales
+        prev_tokens = ["<s>"]*(n-1)  # Delimitadores iniciales
+        final_delimiter = "</s>"  # Delimitador final
+
+        my_sent = []  # La oracion que voy a formar
+        my_sent += prev_tokens  # Le agregamos los delimitadores iniciales
 
         # Generamos un posible token a partir de los prev_tokens
         next_token = self.generate_token(tuple(prev_tokens))
 
         # Mientras el token sea distinto de </s> generero mas oraciones
         while next_token != final_delimiter:
-            my_sent += list((next_token, )) # Vamos armando la oracion
-            prev_tokens += list((next_token, )) # Tokens previos
-            prev_tokens = prev_tokens[1:] # Me quedo con todos menos el primero
+            my_sent += list((next_token, ))  # Vamos armando la oracion
+            prev_tokens += list((next_token, ))  # Tokens previos
+            prev_tokens = prev_tokens[1:]  # Me quedo con todos menos el 1°
             next_token = self.generate_token(tuple(prev_tokens))
 
         # Nos quedamos con la oracion sin los delimitadores iniciales
@@ -275,17 +274,6 @@ class NGramGenerator:
 
         return sent
 
-
-# Metodo de la Transformada Inversa
-# u = random.random()
-# j = 1
-# f = 0.5*((float(2)/3)**j) # f = p1
-# # Mientras la acumulada sea menor a la U, sigo acumulando valores
-# # hasta que la acumulada sea mayor a la U
-# while u > f:
-#     j += 1
-#     f += 0.5*((float(2)/3)**j) # f = f + pj
-# x = j
 
 def countWordsType(sents):
     """
@@ -299,14 +287,15 @@ def countWordsType(sents):
 
     return len(words_type)
 
+
 class AddOneNGram(NGram):
     """
     Heredamos de NGram para poder usar todos sus metodos.
     """
     # super(), es una función build-in que sirve para acceder a atributos que
     # pertenecen a una clase superior.
-    def __init__ (self, n, sents):
-        super().__init__(n, sents) # Para poder poder usar las variables del init
+    def __init__(self, n, sents):
+        super().__init__(n, sents)  # Para poder usar las variables del init
 
         # Le sumamos 1 porque se incluye el marcador </s>.
         self.count_words_type = countWordsType(sents) + 1
@@ -318,7 +307,6 @@ class AddOneNGram(NGram):
         Size of the vocabulary.
         """
         return self.count_words_type
-
 
     def cond_prob(self, token, prev_tokens=None):
         """

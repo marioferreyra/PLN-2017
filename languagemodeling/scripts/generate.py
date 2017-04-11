@@ -11,9 +11,8 @@ Options:
   -h --help     Show this screen.
 """
 
-from docopt import docopt
 import pickle
-
+from docopt import docopt
 from languagemodeling.ngram import NGramGenerator
 
 
@@ -41,5 +40,5 @@ if __name__ == '__main__':
         sent = " ".join(sent)
         print(sent)
 
-    #Cerramos el archivo
+    # Cerramos el archivo
     f.close()

@@ -5,6 +5,13 @@ from math import log
 from languagemodeling.ngram import NGram
 
 
+def log2(x):
+    """
+    Calcula el logaritmo en base 2 de x.
+    """
+    return log(x, 2)
+
+
 class TestNGram(TestCase):
 
     def setUp(self):
@@ -28,9 +35,8 @@ class TestNGram(TestCase):
         # =
         # 6*log2(1/72.0)
         ngram = NGram(1, self.sents)
-        log2 = lambda x: log(x, 2)
         log_prob = 6*log2(1/72.0)
-        
+
         self.assertAlmostEqual(ngram.log_probability(self.sents), log_prob)
 
     def test_log_probability_2gram(self):
@@ -42,35 +48,30 @@ class TestNGram(TestCase):
         # =
         # 2*log2(0.25)
         ngram = NGram(2, self.sents)
-        log2 = lambda x: log(x, 2)
         log_prob = 2*log2(0.25)
-        
+
         self.assertAlmostEqual(ngram.log_probability(self.sents), log_prob)
 
     def test_cross_entropy_1gram(self):
         ngram = NGram(1, self.sents)
-        log2 = lambda x: log(x, 2)
         cross = (6*log2(1/72.0))/10.0
-        
+
         self.assertAlmostEqual(ngram.cross_entropy(self.sents), cross)
 
     def test_cross_entropy_2gram(self):
         ngram = NGram(2, self.sents)
-        log2 = lambda x: log(x, 2)
         cross = (2*log2(0.25))/10.0
-        
+
         self.assertAlmostEqual(ngram.cross_entropy(self.sents), cross)
 
     def test_perplexity_1gram(self):
         ngram = NGram(1, self.sents)
-        log2 = lambda x: log(x, 2)
         perple = pow(2, -((6*log2(1/72.0))/10.0))
-        
+
         self.assertAlmostEqual(ngram.perplexity(self.sents), perple)
 
     def test_perplexity_2gram(self):
         ngram = NGram(2, self.sents)
-        log2 = lambda x: log(x, 2)
         perple = pow(2, -((2*log2(0.25))/10.0))
-        
+
         self.assertAlmostEqual(ngram.perplexity(self.sents), perple)

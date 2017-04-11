@@ -10,13 +10,10 @@ Options:
   -h --help     Show this screen.
 """
 
-from docopt import docopt
 import pickle
-
+from docopt import docopt
 from nltk.corpus import PlaintextCorpusReader  # Para cargar el corpus
 from nltk.tokenize import RegexpTokenizer  # Tokenizador
-
-from languagemodeling.ngram import NGram
 
 
 if __name__ == '__main__':
@@ -32,7 +29,6 @@ if __name__ == '__main__':
     # Reconstruimos el objeto desde la representacion en cadena de bytes
     modelo = pickle.load(f)
 
-
     pattern = r'''(?ix)    # set flag to allow verbose regexps
           (?:sr\.|sra\.)
         | (?:[A-Z]\.)+        # abbreviations, e.g. U.S.A.
@@ -42,8 +38,8 @@ if __name__ == '__main__':
         | [][.,;"'?():-_`]  # these are separate tokens; includes ]
     '''
 
-    PATH = "/home/mario/Escritorio/Corpus" # Ubicacion del archivo
-    FILENAME = "corpus_test.txt" # Nombre del archivo
+    PATH = "/home/mario/Escritorio/Corpus"  # Ubicacion del archivo
+    FILENAME = "corpus_test.txt"  # Nombre del archivo
 
     # Load the data
     tokenizer = RegexpTokenizer(pattern)

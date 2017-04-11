@@ -13,12 +13,11 @@ Options:
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
-from docopt import docopt
-import pickle
 
+import pickle
+from docopt import docopt
 from nltk.corpus import PlaintextCorpusReader  # Para cargar el corpus
 from nltk.tokenize import RegexpTokenizer  # Tokenizador
-
 from languagemodeling.ngram import NGram, AddOneNGram
 
 
@@ -35,8 +34,8 @@ if __name__ == '__main__':
         | [][.,;"'?():-_`]  # these are separate tokens; includes ]
     '''
 
-    PATH = "/home/mario/Escritorio/Corpus" # Ubicacion del archivo
-    FILENAME = "corpus_train.txt" # Nombre del archivo
+    PATH = "/home/mario/Escritorio/Corpus"  # Ubicacion del archivo
+    FILENAME = "corpus_train.txt"  # Nombre del archivo
 
     # Load the data
     tokenizer = RegexpTokenizer(pattern)
@@ -46,7 +45,7 @@ if __name__ == '__main__':
 
     # Train the model
     n = int(opts['-n'])
-    m = str(opts['-m']) # Tipo de modelo
+    m = str(opts['-m'])
 
     # Podemos usar los N-Gramas clasicos o N-Gramas con el suavizado AddOne
     if m == "addone":
