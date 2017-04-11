@@ -227,7 +227,7 @@ class NGramGenerator:
 
         assert len(prev_tokens) == n - 1
 
-        # Obtenemos las probabilidad de los prev_tokens
+        # Obtenemos los prev_tokens con sus probabilidades
         probs_prev_tokens = self.sorted_probs[prev_tokens]
         
         # *** Transformada Inversa ***
@@ -243,6 +243,8 @@ class NGramGenerator:
 
         # Me quedo con una de las palabra
         chosen_token = probs_prev_tokens[index][0]
+
+        # assert chosen_token != ""
 
         return chosen_token
 

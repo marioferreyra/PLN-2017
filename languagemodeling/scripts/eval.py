@@ -1,30 +1,37 @@
 """
-Train an n-gram model.
+Evaluate a language model using the test set.
 
 Usage:
-  train.py -n <n> [-m <model>] -o <file>
-  train.py -h | --help
+  eval.py -i <file>
+  eval.py -h | --help
 
 Options:
-  -n <n>        Order of the model.
-  -m <model>    Model to use [default: ngram]:
-                  ngram: Unsmoothed n-grams.
-                  addone: N-grams with add-one smoothing.
-  -o <file>     Output model file.
+  -i <file>     Language model file.
   -h --help     Show this screen.
 """
+
 from docopt import docopt
 import pickle
 
 from nltk.corpus import PlaintextCorpusReader  # Para cargar el corpus
 from nltk.tokenize import RegexpTokenizer  # Tokenizador
 
-from languagemodeling.ngram import NGram, AddOneNGram
+from languagemodeling.ngram import NGram
 
 
 if __name__ == '__main__':
     # Parseamos los argumentos, de las opciones
     opts = docopt(__doc__)
+
+    # Cargamos las opciones ingresadas
+    model_file = str(opts['-i'])
+
+    # Abrimo el archivo que contiene el Modelo del lenguaje
+    f = open(model_file, "rb")
+
+    # Reconstruimos el objeto desde la representacion en cadena de bytes
+    modelo = pickle.load(f)
+
 
     pattern = r'''(?ix)    # set flag to allow verbose regexps
           (?:sr\.|sra\.)
@@ -36,7 +43,7 @@ if __name__ == '__main__':
     '''
 
     PATH = "/home/mario/Escritorio/Corpus" # Ubicacion del archivo
-    FILENAME = "corpus_train.txt" # Nombre del archivo
+    FILENAME = "corpus_test.txt" # Nombre del archivo
 
     # Load the data
     tokenizer = RegexpTokenizer(pattern)
@@ -44,18 +51,9 @@ if __name__ == '__main__':
 
     sents = corpus.sents()
 
-    # Train the model
-    n = int(opts['-n'])
-    m = str(opts['-m']) # Tipo de modelo
+    print("Log-Probability =", modelo.log_probability(sents))
+    print("Croos Entropy =", modelo.cross_entropy(sents))
+    print("Perplexity =", modelo.perplexity(sents))
 
-    # Podemos usar los N-Gramas clasicos o N-Gramas con el suavizado AddOne
-    if m == "addone":
-        model = AddOneNGram(n, sents)
-    else:
-        model = NGram(n, sents)
-
-    # Save it
-    filename = opts['-o']
-    f = open(filename, 'wb')
-    pickle.dump(model, f)
+    # Cerramos el archivo
     f.close()

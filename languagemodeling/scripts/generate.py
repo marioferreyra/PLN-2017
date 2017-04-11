@@ -18,13 +18,14 @@ from languagemodeling.ngram import NGramGenerator
 
 
 if __name__ == '__main__':
+    # Parseamos los argumentos, de las opciones
     opts = docopt(__doc__)
 
     # Cargamos las opciones ingresadas
     model_file = str(opts['-i'])
     num_sents = int(opts['-n'])
 
-    # Abrimo el Archivo que contiene el Modelo del lenguaje
+    # Abrimo el archivo que contiene el Modelo del lenguaje
     f = open(model_file, "rb")
 
     # Reconstruimos el objeto desde la representacion en cadena de bytes
@@ -40,4 +41,5 @@ if __name__ == '__main__':
         sent = " ".join(sent)
         print(sent)
 
+    #Cerramos el archivo
     f.close()
