@@ -1,4 +1,5 @@
-"""Train an n-gram model.
+"""
+Train an n-gram model.
 
 Usage:
   train.py -n <n> -o <file>
@@ -9,19 +10,18 @@ Options:
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
-# from docopt import docopt
-# import pickle
-
-# from nltk.corpus import gutenberg
+from docopt import docopt
+import pickle
 
 from nltk.corpus import PlaintextCorpusReader  # Para cargar el corpus
 from nltk.tokenize import RegexpTokenizer  # Tokenizador
 
-# from languagemodeling.ngram import NGram
+from languagemodeling.ngram import NGram
 
 
 if __name__ == '__main__':
-    # opts = docopt(__doc__)
+    # Parseamos los argumentos, de las opciones
+    opts = docopt(__doc__)
 
     pattern = r'''(?ix)    # set flag to allow verbose regexps
           (?:sr\.|sra\.)
@@ -32,23 +32,21 @@ if __name__ == '__main__':
         | [][.,;"'?():-_`]  # these are separate tokens; includes ]
     '''
 
-    PATH = "/home/mario/Escritorio"
-    FILENAME = "mi_corpus.txt"
+    PATH = "/home/mario/Escritorio" # Ubicacion del archivo
+    FILENAME = "gabriel_garcia_marquez.txt" # Nombre del archivo
 
     tokenizer = RegexpTokenizer(pattern)
     corpus = PlaintextCorpusReader(PATH, FILENAME, word_tokenizer=tokenizer)
 
-    print(corpus.sents()[:10])
+    # Load the data
+    sents = corpus.sents()
 
-    # # load the data
-    # sents = gutenberg.sents('austen-emma.txt')
+    # Train the model
+    n = int(opts['-n'])
+    model = NGram(n, sents)
 
-    # # train the model
-    # n = int(opts['-n'])
-    # model = NGram(n, sents)
-
-    # # save it
-    # filename = opts['-o']
-    # f = open(filename, 'wb')
-    # pickle.dump(model, f)
-    # f.close()
+    # Save it
+    filename = opts['-o']
+    f = open(filename, 'wb')
+    pickle.dump(model, f)
+    f.close()
