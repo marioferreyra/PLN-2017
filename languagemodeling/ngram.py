@@ -243,8 +243,6 @@ class NGramGenerator:
         # Me quedo con una de las palabra
         chosen_token = probs_prev_tokens[index][0]
 
-        # assert chosen_token != ""
-
         return chosen_token
 
     def generate_sent(self):
