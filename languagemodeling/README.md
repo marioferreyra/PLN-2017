@@ -281,7 +281,7 @@ El calculo es como sigue:
 
 Este script carga un modelo de lenguaje natural entrenado, el cual se obtiene aplicando el *train.py* sobre el corpus_train y luego se calcula la perplexity de un conjunto de oraciones, es decir, el corpus_test.
 
-## Perplejidad de los modelos entrenados con el Suavizado Add-One
+### Perplejidad de los modelos entrenados con el Suavizado Add-One
 
 | n-gram | Perplexity |
 |:------:|:----------:|
@@ -292,5 +292,21 @@ Este script carga un modelo de lenguaje natural entrenado, el cual se obtiene ap
 
 Al ver estos resultados, vemos que mientras el n se hace más grande, la perplexity aumenta.  
 Por lo que podemos decir que el suavizado Add-One no es bueno, porque mientras más chica sea la perplexity mejor.
+
+### Test para Log-Probability, Cross-Entropy, Perplexity
+
+Se implementaron un total de 6 tests nuevo para probar la funcionalidad de *log_probability*, *cross-entropy* y *perplexity*, se distribuyeron de la siguiente manera:
+* 2 tests para *log_probability* (1-grama y 2-grama respectivamente)
+* 2 tests para *cross_entropy* (1-grama y 2-grama respectivamente)
+* 2 tests para *perplexity* (1-grama y 2-grama respectivamente)
+
+#### Test Log-Probability
+Para su implementación nos basamos en las oraciones ya provistas en los test y los tests ya hechos para el método de *sent_log_prob*, del cual se tomaron las probabilidades ya calculadas de cada oración, las cuales se sumaron para así obtener la *log_probability* en cada uno de los casos de los n-gramas.
+
+#### Test Cross-Entropy
+Una vez obtenido la *log_probability* se las dividió por la cantidad de palabras de las oraciones, así obteniendo los valores de *cross_entropy*.
+
+#### Test Perplexity
+Ya obtenido la *cross_entropy* en los test anteriores se realizo el calculo de la perplexity mostrado anteriormente, así obtenido los valores de la *perplexity*
 
 [Método de la transformada inversa]: https://es.wikipedia.org/wiki/M%C3%A9todo_de_la_transformada_inversa
