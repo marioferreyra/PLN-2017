@@ -193,7 +193,7 @@ class NGramGenerator:
         for tokens in counts.keys():
             if len(tokens) == n:
                 token = tokens[n-1]  # El ultimo token
-                prev_tokens = tokens[:-1]  # Todos los tokens previos a tokens
+                prev_tokens = tokens[:-1]  # Todos los tokens previos a token
                 # Probabilidad condicional: P(token | prev_tokens)
                 probability = model.cond_prob(token, list(prev_tokens))
 
@@ -203,8 +203,8 @@ class NGramGenerator:
 
                 # Cargamos en el diccionario prev_tokens:
                 # {token : probabilidad}
-                # Donde: * token es talque: "prev_tokens, tokens"
-                #        * probabilida es talque: P(token | prev_tokens)
+                # Donde: * token es talque: "prev_tokens, token"
+                #        * probabilidad es talque: P(token | prev_tokens)
                 probs[prev_tokens][token] = probability
 
         # Formamos el sorted_probs

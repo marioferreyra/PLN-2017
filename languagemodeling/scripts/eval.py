@@ -47,8 +47,6 @@ if __name__ == '__main__':
 
     sents = corpus.sents()
 
-    print("Log-Probability =", modelo.log_probability(sents))
-    print("Croos Entropy =", modelo.cross_entropy(sents))
     print("Perplexity =", modelo.perplexity(sents))
 
     # Cerramos el archivo
