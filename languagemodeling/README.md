@@ -8,10 +8,10 @@ Mario E. Ferreyra
 Ejercicio 1: Corpus
 -------------------
 
-El corpus que se eligio para este Trabajo Práctico concatenacion de todos las novelas de Gabriel Garcia Marquez y algunos de sus cuentos.
+El corpus que se eligió para este Trabajo Práctico concatenación de todos las novelas de Gabriel García Márquez y algunos de sus cuentos.
 En este ejercicio se trabajo sobre el script train.py
 Para cargar el corpus se utilizo el "corpus reader" de NLTK.
-Luego utilizamos un tokenizador de NLTK con un pattern provisto por la documentacion de NLTK (al cual le agregamos un par de abreviaciones), para luego aplicarlo a nuestro corpus.
+Luego utilizamos un tokenizador de NLTK con un pattern provisto por la documentación de NLTK (al cual le agregamos un par de abreviaciones), para luego aplicarlo a nuestro corpus.
 
 
 Ejercicio 2: Modelo de n-gramas
@@ -20,28 +20,28 @@ Ejercicio 2: Modelo de n-gramas
 En este ejercicio se trabajo sobre el archivo ngram.py.
 En este archivo tuvimos que definir la clase NGram, esta clase tiene como input lo siguiente:
 
-    - n: el n correspodiente a n-grama
+    - n: el n correspondiente a n-grama
     - sents: lista de oraciones
 
-Lo que se hace al principio de esta clase es agregarle a cada oracion sus correspodientes delimitadores de inicio y fin de oracion, pero hay una particularidad la cual y es que a cada oracion le agregamos n-1 marcadores de inicio (y un marcador de fin) para olvidarnos de discriminar los distintos casos (1-grama, 2-grama, 3-grama, ...) y tambien para evitar los problemas de borde.
+Lo que se hace al principio de esta clase es agregarle a cada oración sus correspondientes delimitadores de inicio y fin de oración, pero hay una particularidad la cual y es que a cada oración le agregamos n-1 marcadores de inicio \<s> (y un marcador de fin \</s>) para olvidarnos de discriminar los distintos casos (1-grama, 2-grama, 3-grama, ...) y también para evitar los problemas de borde.
 
 Gracias a esta representación podemos guardar counts correspondientes al n-grama, es decir, los tokens de largo n y sus prev_tokens de largo n-1.
 
-Se implementaron los siguientes metodos:
+Se implementaron los siguientes métodos:
 
     *  count
     *  cond_prob
     *  sent_prob
     *  sent_log_prob
 
-#### Metodo count
+#### Método count
     + Input:
         - tokens: Tupla de palabras
     + Output:
         - Cantidad de veces que aparece tokens en el n-grama
 
 
-#### Metodo cond_prob
+#### Método cond_prob
     + Input:
         - token: Palabra
         - prev_tokens: Lista de palabras previas a token
@@ -53,7 +53,7 @@ Se implementaron los siguientes metodos:
           Entonces:
                 P(token | prev_tokens) = P(wi | w1 w2 ... wi-1)
 
-Como esto son demasiadas sentencias, se usa una Suposicion de Markov de orden k.
+Como esto son demasiadas sentencias, se usa una Suposición de Markov de orden k.
 Es decir:
 
     P(wi | wi-k ... wi-1)
@@ -62,23 +62,23 @@ Ya que:
 
     P(wi | w1 w2 ... wi-1) ≈ P(wi | wi-k ... wi-1)
 
-Cabe destacar que si tenemos un n-grama de orden n, entonces vamos a tener una Suposicion de Markov de orden n-1.
+Cabe destacar que si tenemos un n-grama de orden n, entonces vamos a tener una Suposición de Markov de orden n-1.
 Para poder estimar estas probabilidades, se usa lo siguiente:
 
                                  count(wi-(n-1)) ... wi-1 wi)
     P(wi | wi-(n-1) ... wi-1) = ------------------------------
                                    count(wi-(n-1) ... wi-1)
 
-AGREGAR PROBLEMA CON LA DIVISION POR 0
+AGREGAR PROBLEMA CON LA DIVISIÓN POR 0
 
-#### Metodo sent_prob
+#### Método sent_prob
     + Input:
-        - sent: Lista de palabras (oracion)
+        - sent: Lista de palabras (oración)
     + Output:
-        - Probabilidad de la oracion
+        - Probabilidad de la oración
 
-Recordamos que cada oracion tiene n-1 marcadores de inicio y uno de fin.
-Como sabemos una oracion es una lista de palabras:
+Recordamos que cada oración tiene n-1 marcadores de inicio y uno de fin.
+Como sabemos una oración es una lista de palabras:
 
     sent = w1 w2 ... wm                     Donde: wi es una palabra
 
@@ -86,7 +86,7 @@ Por Regla de la Cadena, tenemos que:
 
     P(w1 w2 ... wm) = productoria(i=1, m) P(wi | w1 w2 ... wi-1)
 
-Por lo visto anteriormente en el Metodo count_prob, gracias a la Suposicion de Markov de orden k, tenemos que:
+Por lo visto anteriormente en el método count_prob, gracias a la Suposición de Markov de orden k, tenemos que:
 
     P(wi | w1 w2 ... wi-1) ≈ P(wi | wi-k ... wi-1)
 
@@ -95,16 +95,16 @@ Por lo que:
     P(w1 w2 ... wm) = productoria(i=1, m) P(wi | wi-k ... wi-1)
 
 
-#### Metodo sent_prob_log
+#### Método sent_prob_log
     + Input:
-        - sent: Lista de palabras (oracion)
+        - sent: Lista de palabras (oración)
     + Output:
-        - Probabilidad logaritmica de la oracion
+        - Probabilidad logarítmica de la oración
 
-Este metodo es muy parecido al sent_prob, salvo que tiene unas cuestiones practicas como trabajar en el espacio logaritmico para calcular la probabilidad de una oracion:
-Tiene las siguientes caracteristicas:
+Este método es muy parecido al sent_prob, salvo que tiene unas cuestiones practicas como trabajar en el espacio logarítmico para calcular la probabilidad de una oración:
+Tiene las siguientes características:
 
-* Sumar es mas rapido que multiplicar.
+* Sumar es mas rápido que multiplicar.
     - productoria(i=1, m) Pi = sumatoria(i=1, m) log2(Pi)
     - Donde Pi = probabilidad i-esima
 
@@ -128,40 +128,40 @@ En el archivo ngram.py tuvimos que definir la clase NGramGenerator, esta clase t
     - model: modelo de n-grama
 
 Lo que se hace al principio de esta clase es guardar las probabilidades condicionales de cada palabra en un diccionario probs.
-Tambien lo que se hace es guardar las mismas probabilidades condicionales en otro diccionario sorted_probs, con la ventaja de en este nuevo diccionario se las tiene ordenadas, haciendo mucho mas rapido el metodo generate_token que describiremos a continuacion.
+También lo que se hace es guardar las mismas probabilidades condicionales en otro diccionario sorted_probs, con la ventaja de en este nuevo diccionario se las tiene ordenadas, haciendo mucho mas rápido el método generate_token que describiremos a continuación.
 
-Se implementaron los siguientes metodos:
+Se implementaron los siguientes métodos:
 
     *  generate_token
     *  generate_sent
 
-#### Metodo generate_token
+#### Método generate_token
     + Input:
         - prev_tokens: Lista de palabras
     + Output:
         - Token aleatorio, teniendo en cuenta los prev_tokens
 
-Para poder generar el token se utilizo el metodo de la Transformada inversa visto en la materia Modelos y Simulacion.
+Para poder generar el token se utilizo el método de la Transformada inversa visto en la materia Modelos y Simulación.
 
     [Método de la transformada inversa](https://es.wikipedia.org/wiki/M%C3%A9todo_de_la_transformada_inversa)
 
 
-#### Metodo generate_sent
+#### Método generate_sent
     + Output:
-        - Oracion aleatoria
+        - Oración aleatoria
 
-Para poder generar una oracion de utilizo el metodo generate_token tomando como prev_tokens a los n-1 marcadores de inicio obteniendo asi un token nuevo, luego se toma este token nuevo como prev_tokens y obteniendo asi otro token nuevo; de esta forma se sigue iterando hasta que nos topamos con el marcador de fin y ahi devolvemos la oracion generada:
-Basicamente el esquema en pseudocodigo es el siguiente:
+Para poder generar una oración de utilizo el método generate_token tomando como prev_tokens a los n-1 marcadores de inicio obteniendo así un token nuevo, luego se toma este token nuevo como prev_tokens y obteniendo así otro token nuevo; de esta forma se sigue iterando hasta que nos topamos con el marcador de fin y ahí devolvemos la oración generada:
+Básicamente el esquema en pseudocodigo es el siguiente:
 
-    oracion = ""
+    oración = ""
     prev_tokens := n-1 marcadores de inicio
     new_token := generate(prev_tokens)
 
     while new_token ≠ marcador de fin do
-        oracion := oracion ++ new_token  /* ++: concatenar */
+        oración := oración ++ new_token  /* ++: concatenar */
         new_token := generate(new_token)
 
-    return oracion
+    return oración
 
 
 #### generate.py
@@ -193,34 +193,34 @@ Este script se encarga de generar oraciones del lenguaje natural usando un model
 Ejercicio 4: Suavizado "Add-One"
 --------------------------------
 
-En este ejercicio se trabajo sobre el archivo ngram.py y ademas se agrego al script train.py una opcion de linea de comandos que le permita utilizar Add-One en lugar de los n-gramas clasicos.
+En este ejercicio se trabajo sobre el archivo ngram.py y ademas se agrego al script train.py una opción de linea de comandos que le permita utilizar Add-One en lugar de los n-gramas clásicos.
 En el archivo ngram.py tuvimos que definir la clase AddOneNGram, esta clase tiene como input lo siguiente:
 
-    - n: el n correspodiente a n-grama
+    - n: el n correspondiente a n-grama
     - sents: lista de oraciones
 
 Al principio de esta clase se calcula el tamaño del alfabeto (cantidad de words type) incluyendo el marcador def fin.
 
-Se implementaron los siguientes metodos:
+Se implementaron los siguientes métodos:
 
     *  V
     *  cond_prob
 
-#### Metodo V
+#### Método V
     + Output:
         - Tamaño del vocabulario
 
 Solamente se devuelve el valor del tamaño del alfabeto calculado al principio de la clase.
 
 
-#### Metodo cond_prob
+#### Método cond_prob
     + Input:
         - token: Palabra
         - prev_tokens: Lista de palabras previas a token
     + Output:
         - Probabilidad condicional con Add-One del token: P*(token | prev_tokens)
 
-Este metodo fue una reimplementacion del hecho en la clase NGram, por lo cual nos basamos en los mismo fundamentos.
+Este método fue una reimplementación del hecho en la clase NGram, por lo cual nos basamos en los mismo fundamentos.
 Veamos como se calcula la nueva probabilidad condicional:
 
                                   count(wi-(n-1)) ... wi-1 wi) + 1
@@ -237,19 +237,19 @@ En este ejercicio se separo nuestro corpus en dos partes:
 
 Ademas se programo un script eval.py para cargar un modelo de lenguajes y evaluarlo sobre el conjunto de test.
 
-Tambien lo que hicimos fue extender la clase NGram, con nuevos metodos los cuales son:
+También lo que hicimos fue extender la clase NGram, con nuevos métodos los cuales son:
 
     *  log-probability
     *  cross-entropy
     *  perplexity
 
-#### Metodo log-probability
+#### Método log-probability
     + Input:
         - sents: Lista de oraciones
     + Output:
         - Calculo de log-probability
 
-En este metodo se encarga del calculo de log-probability de una lista de oraciones.
+En este método se encarga del calculo de log-probability de una lista de oraciones.
 Supongamos que tenemos m oraciones, es decir:
 
     s1, s2, ..., sm
@@ -259,13 +259,13 @@ El calculo es el siguiente:
     log-probability(s1, s2, ..., sm) = sumatoria(i=1, m) log2(P(si))
 
 
-#### Metodo croos-entropy
+#### Método cross-entropy
     + Input:
         - sents: Lista de oraciones
     + Output:
         - Calculo de cross-entropy
 
-En este metodo se encarga del calculo de cross-entropy de una lista de oraciones.
+En este método se encarga del calculo de cross-entropy de una lista de oraciones.
 El calculo es como sigue:
 
                                       log-probability(s1, s2, ..., sm)
@@ -277,13 +277,13 @@ Donde:
     - M: cantidad de palabras en bruto de las oraciones (se cuentan las palabras repetidas).
 
 
-#### Metodo perplexity
+#### Método perplexity
     + Input:
         - sents: Lista de oraciones
     + Output:
         - Calculo de perplexity
 
-En este metodo se encarga del calculo de perplexity de una lista de oraciones.
+En este método se encarga del calculo de perplexity de una lista de oraciones.
 El calculo es como sigue:
 
     perplexity(s1, s2, ..., sm) = 2^(- cross-entropy(s1, s2, ..., sm))
