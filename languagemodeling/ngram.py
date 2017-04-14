@@ -340,3 +340,53 @@ class AddOneNGram(NGram):
             probability = count_tokens / count_prev_tokens
 
         return probability
+
+
+class InterpolatedNGram(NGram):
+
+    def __init__(self, n, sents, gamma=None, addone=True):
+        """
+        n -- order of the model.
+        sents -- list of sentences, each one being a list of tokens.
+        gamma -- interpolation hyper-parameter (if not given, estimate using
+            held-out data).
+        addone -- whether to use addone smoothing (default: True).
+        """
+        super().__init__(n, sents)
+        pass
+
+
+class BackOffNGram(NGram):
+
+    def __init__(self, n, sents, beta=None, addone=True):
+        """
+        Back-off NGram model with discounting as described by Michael Collins.
+
+        n -- order of the model.
+        sents -- list of sentences, each one being a list of tokens.
+        beta -- discounting hyper-parameter (if not given, estimate using
+            held-out data).
+        addone -- whether to use addone smoothing (default: True).
+        """
+        super().__init__(n, sents)
+
+    def A(self, tokens):
+        """Set of words with counts > 0 for a k-gram with 0 < k < n.
+
+        tokens -- the k-gram tuple.
+        """
+        pass
+
+    def alpha(self, tokens):
+        """Missing probability mass for a k-gram with 0 < k < n.
+
+        tokens -- the k-gram tuple.
+        """
+        pass
+
+    def denom(self, tokens):
+        """Normalization factor for a k-gram with 0 < k < n.
+
+        tokens -- the k-gram tuple.
+        """
+        pass
