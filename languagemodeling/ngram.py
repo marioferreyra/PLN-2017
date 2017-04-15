@@ -353,7 +353,80 @@ class InterpolatedNGram(NGram):
         addone -- whether to use addone smoothing (default: True).
         """
         super().__init__(n, sents)
-        pass
+
+        self.gamma = gamma
+        self.models = models = []  # Listas de modelos, para la interpolacion
+
+        # DUDA: el parametro addone, es para todos los modelos, o solo para el ni
+        # saber si lo uso en el de nivel mas bajo
+        if addone:
+            models.append(AddOneNGram(1, sents))
+        else:
+            models.append(NGram(1, sents))
+
+        for i in range(2, n+1):
+            # [2, 3, ..., n]
+            models.append(NGram(i, sents))
+
+    def count(self, tokens):
+        length_token = len(tokens)
+        if tokens == ():
+            length_token = 1
+        return self.models[length_token-1].count(tokens)
+
+
+    def get_lambdas(self, sent):
+        # Revisar bien mañana, tengo mucho sueño zzzzzz
+        models = self.models
+        gamma = self.gamma
+        
+        lambdas = []  # Lista de  lambdas
+        for i in range(len(sent)):
+            # [0 ... len(sent) - 1]
+            # new_sent = sent[i:]
+            sumatoria = 0
+
+            for j in range(0, i):
+                # Ver de usar sum
+                sumatoria += lambdas[j]
+
+            c = float(models[i].count(tuple(sent[i:])))
+            lambdas.append((1 - sumatoria) * (c/(c + gamma)))
+
+
+        ultimo = 1 - sum(lambdas)
+        lambdas.append(ultimo)
+
+        return lambdas
+
+    def cond_prob(self, token, prev_tokens=None):
+        """
+        Conditional probability of a token.
+
+        token -- the token.
+        prev_tokens -- the previous n-1 tokens (optional only if n = 1).
+        """
+        n = self.n
+        models = self.models
+
+        if not prev_tokens:
+            prev_tokens = []
+
+        assert len(prev_tokens) == n - 1
+
+        tokens = prev_tokens + [token]  # (prev_tokens, token)
+
+        probability = 0
+
+        lambdas = self.get_lambdas(prev_tokens)
+
+        # Revisar bien mañana, tengo mucho sueño zzzzzz
+        for i in range(len(tokens)):
+            print(prev_tokens, prev_tokens[i:])
+            p_ml = models[i].cond_prob(token, prev_tokens[i:])
+            probability += lambdas[i] * p_ml
+
+        return probability
 
 
 class BackOffNGram(NGram):
@@ -371,22 +444,28 @@ class BackOffNGram(NGram):
         super().__init__(n, sents)
 
     def A(self, tokens):
-        """Set of words with counts > 0 for a k-gram with 0 < k < n.
+        """
+        Set of words with counts > 0 for a k-gram with 0 < k < n.
 
         tokens -- the k-gram tuple.
         """
         pass
 
     def alpha(self, tokens):
-        """Missing probability mass for a k-gram with 0 < k < n.
+        """
+        Missing probability mass for a k-gram with 0 < k < n.
 
         tokens -- the k-gram tuple.
         """
         pass
 
     def denom(self, tokens):
-        """Normalization factor for a k-gram with 0 < k < n.
+        """
+        Normalization factor for a k-gram with 0 < k < n.
 
         tokens -- the k-gram tuple.
         """
         pass
+
+sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
+my_model = InterpolatedNGram(2, sents)
