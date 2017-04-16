@@ -357,8 +357,9 @@ class InterpolatedNGram(NGram):
         self.gamma = gamma
         self.models = models = []  # Listas de modelos, para la interpolacion
 
-        # DUDA: el parametro addone, es para todos los modelos, o solo para el ni
+        # DUDA: el parametro addone, es para todos los modelos, o solo para
         # saber si lo uso en el de nivel mas bajo
+        # addone = False # HARDCODE
         if addone:
             models.append(AddOneNGram(1, sents))
         else:
@@ -375,27 +376,26 @@ class InterpolatedNGram(NGram):
         return self.models[length_token-1].count(tokens)
 
 
-    def get_lambdas(self, sent):
-        # Revisar bien mañana, tengo mucho sueño zzzzzz
+    def get_lambdas(self, tokens):
         models = self.models
-        gamma = self.gamma
         
-        lambdas = []  # Lista de  lambdas
-        for i in range(len(sent)):
-            # [0 ... len(sent) - 1]
-            # new_sent = sent[i:]
-            sumatoria = 0
+        gamma = self.gamma
+        # gamma = 1.0 # Hardcode
 
-            for j in range(0, i):
-                # Ver de usar sum
-                sumatoria += lambdas[j]
+        lambdas = []  # Lista de lambdas
+        # print("lambdas = ", lambdas)
+        for i in range(len(tokens)):
+            # sumatoria = 1
+            sumatoria = sum(lambdas[j] for j in range(0, i))
+            # print(sumatoria)
 
-            c = float(models[i].count(tuple(sent[i:])))
+            c = float(models[i].count(tuple(tokens[i:])))
+            # print("count(come) = ", c)
             lambdas.append((1 - sumatoria) * (c/(c + gamma)))
+            # lambdas.append(sumatoria * (c/(c + gamma)))
+            # print(lambdas)
 
-
-        ultimo = 1 - sum(lambdas)
-        lambdas.append(ultimo)
+        lambdas.append(1 - sum(lambdas))
 
         return lambdas
 
@@ -416,15 +416,29 @@ class InterpolatedNGram(NGram):
 
         tokens = prev_tokens + [token]  # (prev_tokens, token)
 
+        # print("token =", token)
+        # print("prev_tokens =", prev_tokens)
+        # print("tokens =", tokens)
+
         probability = 0
 
         lambdas = self.get_lambdas(prev_tokens)
 
-        # Revisar bien mañana, tengo mucho sueño zzzzzz
+        # print("probabilidad =", probability)
+        # print("lambdas =", lambdas)
+
+        my_models = []
+        for i in reversed(range(0, len(models))):
+            my_models.append(models[i])
+
+        # print("Modelos =", models)
+        # print("My Modelos =", my_models)
+
         for i in range(len(tokens)):
-            print(prev_tokens, prev_tokens[i:])
-            p_ml = models[i].cond_prob(token, prev_tokens[i:])
+            p_ml = my_models[i].cond_prob(token, prev_tokens[i:])
             probability += lambdas[i] * p_ml
+            # print("lambdas =", lambdas[i], "P_ml =", p_ml)
+            # print("probability", i, "=", probability)
 
         return probability
 
@@ -467,5 +481,11 @@ class BackOffNGram(NGram):
         """
         pass
 
-sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
-my_model = InterpolatedNGram(2, sents)
+
+# sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
+# my_model = InterpolatedNGram(2, sents)
+# my_model.cond_prob("pescado", ["come"])
+
+# print("New", NGram(2, sents).cond_prob("pescado", ["come"]))
+# print("New02", NGram(1, sents).cond_prob("pescado"))
+# print (my_model.get_lambdas(["come"]))
