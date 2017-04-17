@@ -445,6 +445,9 @@ class InterpolatedNGram(NGram):
         """
         # Tengo que analizar a que n-grama pertenece el tokens,
         # para ellos usamos su largo
+        # Ejemplo: ["el", "gato", "come"] len = 3 --> 3-grama
+        # ["el", "gato"] len = 2 --> 2-grama
+        # ["el"] len = 1 --> 1-grama
         length_token = len(tokens)
 
         # Si es "vacio" pertenece a un 1-grama
