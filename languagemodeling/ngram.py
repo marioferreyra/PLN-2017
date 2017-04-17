@@ -352,9 +352,20 @@ class InterpolatedNGram(NGram):
             held-out data).
         addone -- whether to use addone smoothing (default: True).
         """
+        # El valor para Gamma puede ser elegido de nuevo maximizando
+        # la log-verosimilitud de un conjunto de datos de desarrollo
+
+        # El valor para Gamma puede ser elegido de nuevo minimizar
+        # la perplexity de un conjunto de held-out data
+
         super().__init__(n, sents)
 
         self.gamma = gamma
+        # ESTO LO HAGO DESPUES, NO ENTIENDO COMO ESTIMAR EL GAMMA
+        # if gamma is None:
+        #     sents, held_out = self.getHeldOut(sents)
+        #     self.gamma = self.getGamma(held_out)
+
         self.models = models = []  # Listas de modelos, para la interpolacion
 
         # DUDA: el parametro addone, es para todos los modelos, o solo para
@@ -369,6 +380,30 @@ class InterpolatedNGram(NGram):
             # [2, 3, ..., n]
             models.append(NGram(i, sents))
 
+    def getHeldOut(self, sents, percentage=0.1):
+        """
+        Calcula el Held Out de una lista de oraciones
+
+        sents -- listas oraciones
+        percentage -- porcentaje a tomar de las oraciones
+        """
+        # Lo que no quiero para el held_out
+        rest = int((1 - percentage) * len(sents))
+
+        new_sents = sents[:rest]  # Lo que me sobra
+        held_out = sents[rest:]  # El porcentaje de las oraciones que quiero
+
+        return sents, held_out
+
+
+    def getGamma(self, held_out):
+        """
+        Obtenemos gamma, maximizando
+        """
+        # my_log_prob = float("-inf")
+        # my_referense = self.log_probability(held_out)
+        pass
+
     def count(self, tokens):
         length_token = len(tokens)
         if tokens == ():
@@ -376,9 +411,9 @@ class InterpolatedNGram(NGram):
         return self.models[length_token-1].count(tokens)
 
 
-    def get_lambdas(self, tokens):
+    def getLambdas(self, tokens):
         models = self.models
-        
+
         gamma = self.gamma
         # gamma = 1.0 # Hardcode
 
@@ -422,7 +457,7 @@ class InterpolatedNGram(NGram):
 
         probability = 0
 
-        lambdas = self.get_lambdas(prev_tokens)
+        lambdas = self.getLambdas(prev_tokens)
 
         # print("probabilidad =", probability)
         # print("lambdas =", lambdas)
