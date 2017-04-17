@@ -418,20 +418,22 @@ class InterpolatedNGram(NGram):
         my_log_prob = self.log_probability(held_out)
 
         # log-probability a maximizar
-        # Notar que la menor log-probability puede ser -inf por el logaritmo
+        # Notar que la menor log-probability que puede haber
+        # es -inf por el logaritmo
         log_prob_to_max = float("-inf")
 
-        # Mientras no sea haya maximizado seguimos probando gammas
-        while log_prob_to_max < my_log_prob:
+        while True:
+            # Se logro maximizar log_probability
+            if log_prob_to_max >= my_log_prob:
+                break
+
             log_prob_to_max = my_log_prob
+            new_gamma = self.gamma # El gamma correspondiente a log_prob_to_max
 
             # Calculamos la nueva log-probability
             # Vamos probando de 100 en 100
-            self.gamma += 100
+            self.gamma += 0.1
             my_log_prob = self.log_probability(held_out)
-
-        # Porque itere una vez de mas, entonces le quito un aumento
-        new_gamma = self.gamma - 100
 
         return new_gamma
 
@@ -442,10 +444,10 @@ class InterpolatedNGram(NGram):
         tokens -- the k-gram tuple.
         """
         # Tengo que analizar a que n-grama pertenece el tokens,
-        # para ellos usamos su tamaño
+        # para ellos usamos su largo
         length_token = len(tokens)
 
-        # Si es "vacio", es un 1-grama
+        # Si es "vacio" pertenece a un 1-grama
         if tokens == ():
             length_token = 1
 
@@ -463,12 +465,12 @@ class InterpolatedNGram(NGram):
         models = self.models
         gamma = self.gamma
 
-        # CONTROLAR
         lambdas = []  # Lista de lambdas
         for i in range(len(tokens)):
             # [0, 1, 2, ..., len(tokens)-1]
             sumatoria = sum(lambdas[j] for j in range(0, i)) # [0, 1, ..., i-1]
-            c = float(models[i].count(tuple(tokens[i:])))
+            # c = float(models[i].count(tuple(tokens[i:])))
+            c = float(self.count(tuple(tokens[i:])))
             lambdas.append((1 - sumatoria) * (c/(c + gamma)))
 
         lambdas.append(1 - sum(lambdas))
@@ -577,16 +579,18 @@ class BackOffNGram(NGram):
         pass
 
 
-sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
-my_model = InterpolatedNGram(2, sents)
+
+
+# sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
+# my_model = InterpolatedNGram(2, sents)
 # print(my_model.count(()))
-# my_model.getGamma("hola")
+# my_model.getGamma("la gata come salmón .".split())
 # my_model.cond_prob("pescado", ["come"])
 
 # TEST LAMBDAS
 # print("New", NGram(2, sents).cond_prob("pescado", ["come"]))
 # print("New02", NGram(1, sents).cond_prob("pescado"))
-print (my_model.getLambdas(["come"]))
+# print (my_model.getLambdas(["come"]))
 
 # ==============
 # PARA BACKOFF
