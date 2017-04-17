@@ -11,6 +11,8 @@ Options:
                   ngram: Unsmoothed n-grams.
                   addone: N-grams with add-one smoothing.
                   inter: N-grams with interpolation smoothing.
+                  backoff: N-grams with back-off smoothing (with discounting).
+                  # La opcion back-off todavia no esta implementada
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
@@ -52,8 +54,9 @@ if __name__ == '__main__':
     if m == "addone":
         model = AddOneNGram(n, sents)
     elif m == "inter":
-        print("INTERPOLACION")
         model = InterpolatedNGram(n, sents)
+    # elif m == "backoff":
+    #     model = BackOffNGram(n, sents)
     else:
         model = NGram(n, sents)
 
