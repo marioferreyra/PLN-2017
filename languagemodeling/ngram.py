@@ -432,7 +432,7 @@ class InterpolatedNGram(NGram):
 
             # Calculamos la nueva log-probability
             # Vamos probando de 100 en 100
-            self.gamma += 0.1
+            self.gamma += 100
             my_log_prob = self.log_probability(held_out)
 
         return new_gamma
