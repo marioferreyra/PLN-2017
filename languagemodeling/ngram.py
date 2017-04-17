@@ -352,25 +352,19 @@ class InterpolatedNGram(NGram):
             held-out data).
         addone -- whether to use addone smoothing (default: True).
         """
-        # El valor para Gamma puede ser elegido de nuevo maximizando
-        # la log-verosimilitud de un conjunto de datos de desarrollo
-
-        # El valor para Gamma puede ser elegido de nuevo minimizar
-        # la perplexity de un conjunto de held-out data
-
         super().__init__(n, sents)
 
         self.gamma = gamma
-        # ESTO LO HAGO DESPUES, NO ENTIENDO COMO ESTIMAR EL GAMMA
-        # if gamma is None:
-        #     sents, held_out = self.getHeldOut(sents)
-        #     self.gamma = self.getGamma(held_out)
-
         self.models = models = []  # Listas de modelos, para la interpolacion
 
-        # DUDA: el parametro addone, es para todos los modelos, o solo para
-        # saber si lo uso en el de nivel mas bajo
+        # Ponemos esta linea aca porque en caso de que no den el gamma,
+        # separamos el held_out, y calculamos los modelos sin el held_out
+        # porque si se los dejamos falla el ultimo test
+        if gamma is None:
+            sents, held_out = self.getHeldOut(sents)
+
         # addone = False # HARDCODE
+        # models[0] = alguno de los modelos
         if addone:
             models.append(AddOneNGram(1, sents))
         else:
@@ -380,57 +374,107 @@ class InterpolatedNGram(NGram):
             # [2, 3, ..., n]
             models.append(NGram(i, sents))
 
+        # models = [1-grama, 2-grama, ... , n-grama]
+
+        # Ponemos esta linea aca porque para obtener el gamma necesitamos
+        # calcular la log-probability, que usa nuestro cond_prob, que esto a la
+        # vez usa nuestros modelos, entonces necesitamos los modelos
+        if gamma is None:
+            self.gamma = self.getGamma(held_out)
+
     def getHeldOut(self, sents, percentage=0.1):
         """
-        Calcula el Held Out de una lista de oraciones
+        Obtine los datos Held Out de una lista de oraciones
+        segun un porcentaje dado.
 
         sents -- listas oraciones
-        percentage -- porcentaje a tomar de las oraciones
+        percentage -- porcentaje a tomar de las oraciones (default: 10%)
         """
         # Lo que no quiero para el held_out
         rest = int((1 - percentage) * len(sents))
 
-        new_sents = sents[:rest]  # Lo que me sobra
-        held_out = sents[rest:]  # El porcentaje de las oraciones que quiero
+        # El resto de oraciones
+        new_sents = sents[:rest]
+        # El porcentaje de oraciones que quiero, tomo de las ultimas oraciones
+        held_out = sents[rest:]
 
-        return sents, held_out
-
+        return new_sents, held_out
 
     def getGamma(self, held_out):
         """
-        Obtenemos gamma, maximizando
+        Calculamos un gamma a partir de un held_out de datos.
+        Ya que:
+        1) El valor para Gamma puede ser elegido de nuevo maximizando la
+           log-probability de un held-out data
+
+        2) El valor para Gamma puede ser elegido de nuevo minimizar la
+           perplexity de un held-out data
+
+        Notar que (1) y (2) son equivalentes, pero hacer (1) lleva menos
+        operaciones, por ello implementaremos (1).
         """
-        # my_log_prob = float("-inf")
-        # my_referense = self.log_probability(held_out)
-        pass
+        self.gamma = 1  # Valor inicial de gamma
+        # log-probability calculada con el gamma actusl
+        my_log_prob = self.log_probability(held_out)
+
+        # log-probability a maximizar
+        # Notar que la menor log-probability puede ser -inf por el logaritmo
+        log_prob_to_max = float("-inf")
+
+        # Mientras no sea haya maximizado seguimos probando gammas
+        while log_prob_to_max < my_log_prob:
+            log_prob_to_max = my_log_prob
+
+            # Calculamos la nueva log-probability
+            # Vamos probando de 100 en 100
+            self.gamma += 100
+            my_log_prob = self.log_probability(held_out)
+
+        # Porque itere una vez de mas, entonces le quito un aumento
+        new_gamma = self.gamma - 100
+
+        return new_gamma
 
     def count(self, tokens):
+        """
+        Count for an k-gram with 0 < k < n+1
+
+        tokens -- the k-gram tuple.
+        """
+        # Tengo que analizar a que n-grama pertenece el tokens,
+        # para ellos usamos su tamaño
         length_token = len(tokens)
+
+        # Si es "vacio", es un 1-grama
         if tokens == ():
             length_token = 1
-        return self.models[length_token-1].count(tokens)
 
+        model = self.models[length_token-1]
+
+        return model.count(tokens)
 
     def getLambdas(self, tokens):
+        """
+        Calculamos los lambdas implementando la formula de la siguiente nota:
+            https://cs.famaf.unc.edu.ar/~francolq/lm-notas.pdf
+
+        tokens -- tokens para el calculo de los lambdas
+        """
         models = self.models
-
         gamma = self.gamma
-        # gamma = 1.0 # Hardcode
 
+        # CONTROLAR
         lambdas = []  # Lista de lambdas
-        # print("lambdas = ", lambdas)
         for i in range(len(tokens)):
-            # sumatoria = 1
-            sumatoria = sum(lambdas[j] for j in range(0, i))
-            # print(sumatoria)
-
+            # [0, 1, 2, ..., len(tokens)-1]
+            sumatoria = sum(lambdas[j] for j in range(0, i)) # [0, 1, ..., i-1]
             c = float(models[i].count(tuple(tokens[i:])))
-            # print("count(come) = ", c)
             lambdas.append((1 - sumatoria) * (c/(c + gamma)))
-            # lambdas.append(sumatoria * (c/(c + gamma)))
-            # print(lambdas)
 
         lambdas.append(1 - sum(lambdas))
+
+        assert sum(lambdas) == 1
+        # Tambien puedo hacer un assert para ver que lambda_i >= 0
 
         return lambdas
 
@@ -451,29 +495,22 @@ class InterpolatedNGram(NGram):
 
         tokens = prev_tokens + [token]  # (prev_tokens, token)
 
-        # print("token =", token)
-        # print("prev_tokens =", prev_tokens)
-        # print("tokens =", tokens)
-
         probability = 0
 
+        # Calculamos los lambdas:
+        # [lambda_1, lambda_2, ... ,lambda_n]
         lambdas = self.getLambdas(prev_tokens)
 
-        # print("probabilidad =", probability)
-        # print("lambdas =", lambdas)
-
+        # Revertimos los modelos porque empezamos de los modelos mas altos a
+        # a los mas bajos, es decir:
+        #       my_models = [n-grama, (n-1)-grama, ..., 1-grama]
         my_models = []
         for i in reversed(range(0, len(models))):
             my_models.append(models[i])
 
-        # print("Modelos =", models)
-        # print("My Modelos =", my_models)
-
         for i in range(len(tokens)):
             p_ml = my_models[i].cond_prob(token, prev_tokens[i:])
             probability += lambdas[i] * p_ml
-            # print("lambdas =", lambdas[i], "P_ml =", p_ml)
-            # print("probability", i, "=", probability)
 
         return probability
 
@@ -491,6 +528,29 @@ class BackOffNGram(NGram):
         addone -- whether to use addone smoothing (default: True).
         """
         super().__init__(n, sents)
+
+        self.beta = beta
+
+        # ESTO LO HAGO DESPUES, NO ENTIENDO COMO ESTIMAR EL BETA
+        # ES PARECIDO AL DE INTERPOLATE
+        # if beta is None:
+        #     sents, held_out = self.getHeldOut(sents)
+        #     self.gamma = self.getGamma(held_out)
+
+        self.models = models = []  # Listas de modelos, para la interpolacion
+
+        if addone:
+            models.append(AddOneNGram(1, sents))
+        else:
+            models.append(NGram(1, sents))
+
+        for i in range(2, n+1):
+            # [2, 3, ..., n]
+            models.append(NGram(i, sents))
+
+        # Diccionario de conjuntos
+        # self.conjunto_A = conjunto_A = defaultdict(set)
+        # self.conjunto_A = conjunto_A = dict()
 
     def A(self, tokens):
         """
@@ -517,10 +577,18 @@ class BackOffNGram(NGram):
         pass
 
 
-# sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
-# my_model = InterpolatedNGram(2, sents)
+sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
+my_model = InterpolatedNGram(2, sents)
+# print(my_model.count(()))
+# my_model.getGamma("hola")
 # my_model.cond_prob("pescado", ["come"])
 
+# TEST LAMBDAS
 # print("New", NGram(2, sents).cond_prob("pescado", ["come"]))
 # print("New02", NGram(1, sents).cond_prob("pescado"))
-# print (my_model.get_lambdas(["come"]))
+print (my_model.getLambdas(["come"]))
+
+# ==============
+# PARA BACKOFF
+# sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
+# back = BackOffNGram(1, sents)
