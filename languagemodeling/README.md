@@ -293,6 +293,101 @@ Este script carga un modelo de lenguaje natural entrenado, el cual se obtiene ap
 Al ver estos resultados, vemos que mientras el n se hace más grande, la perplexity aumenta.  
 Por lo que podemos decir que el suavizado Add-One no es bueno, porque mientras más chica sea la perplexity mejor.
 
+
+Ejercicio 6: Suavizado por Interpolación
+----------------------------------------
+
+En este ejercicio se trabajo sobre el archivo *ngram.py* y ademas se agrego al script *train.py* una opción de linea de comandos que le permita utilizar Interpolación en lugar de los n-gramas clásicos y Add-One.  
+En el archivo *ngram.py* tuvimos que definir la clase InterpolatedNGram, esta clase tiene como input lo siguiente:
+
+    - n: el n correspondiente a n-grama
+    - sents: lista de oraciones
+    - gamma: parámetro para el calculo de la probabilidad condicional
+    - addone: parámetro para saber si el primer 1-grama es suavizado con Add-One
+
+Lo que hacemos al principio en esta clase es analizar si el *gamma* es parámetro, en el caso de que no sea parámetro, vamos a necesitar *Datos Held Out* para su posterior calculo.  
+Los *Datos Held Out* son un porcentaje de las *sents* (en este caso un 10%), es decir, a las *sents* les sacamos un 10%, para los *Datos Held Out*.  
+Luego lo que hacemos es generar: 1-grama, 2-grama, ..., n-grama. Esto cobrara mas sentido cuando expliquemos el método *cond_prob*
+
+Se implementaron los siguientes métodos:
+
+    * getHeldOut
+    * getGamma
+    * count
+    * getLambdas
+    * cond_prob
+
+#### Método getHeldOut
+    + Input:
+        - sents: Listas de oraciones
+        - percentage: porcentaje de oraciones a tomar
+    + Output:
+        - Datos Held Out y las nuevas sents
+
+Solamente nos genera los *Datos Held Out* a partir de las oraciones dadas y las nuevas "sents", es decir, las *sents* menos los *Datos Held Out*.
+
+#### Método getGamma
+    + Input:
+        - held_out: Datos Held Out
+    + Output:
+        - Calculo de un *gamma*
+
+Para el calculo del gamma se realiza un "barrido", usando los *Datos Held Out*.  
+En las siguientes notas [Notas de Michael Collins] nos explica lo siguiente:  
+1. El valor para Gamma puede ser elegido de nuevo maximizando la log-probability de un held-out data
+
+2. El valor para Gamma puede ser elegido de nuevo minimizar la perplexity de un held-out data
+
+Notar que (1) y (2) son equivalentes, pero hacer (1) lleva menos operaciones, por ello se implemento (1).  
+
+Básicamente el "barrido" es ir probando valores de *gamma*:  
+A. Ponerle a *gamma* un valor inicial  
+B. Calcular *log_probability* con los *Datos Held Out*.  
+C. Aumentar *gamma* y calcular *log_probability*.  
+D. Aumentar *gamma* y calcular *log_probability*.  
+E. Así sucesivamente.  
+F. Quedarse con el *gamma* que mejora la *log_probability*.  
+
+#### Método count
+    + Input:
+        - tokens: Tupla de palabras
+    + Output:
+        - Cantidad de veces que aparece tokens en alguno de los n-gramas
+
+Este método count a diferencias de los otros *count* tiene la particularidad de que el *tokens* puede pertenecer a cualquiera de los n-gramas, por lo que para solucionar este problema analizamos el largo de *tokens* para poder determinar a que n-grama pertenece.
+
+#### Método getLambdas
+    + Input:
+        - tokens: lista de palabras
+    + Output:
+        - Calculo de lambdas.
+
+Para el calculo de los lambdas implementamos las formulas que están en las notas: [Modelado de Lenguaje: Notas Complementarias].
+
+#### Método cond_prob
+    + Input:
+        - token: Palabra
+        - prev_tokens: Lista de palabras previas a token
+    + Output:
+        - Probabilidad condicional.
+
+Para poder realizar el calculo de de la probabilidad condicional, se implemento las formulas de las siguientes notas [Modelado de Lenguaje: Notas Complementarias].  
+Los n-gramas que se generaron al principio son para el calculo de la probabilidades condicionales de los distintos n-gramas (*qML* en las notas).
+
+
+### Perplejidad de los modelos entrenados con el Suavizado por Interpolación
+
+| n-gram | Perplexity |
+|:------:|:----------:|
+|   1    |    1364    |
+|   2    |    508     |
+|   3    |    476     |
+|   4    |    472     |
+
+Calculamos la perplexity usando como modelo el Suavizado por Interpolación y como se ven en los datos expuestos en la tabla de arriba, vemos que mientras el n se hace más grande, la perplexity disminuye y eso es bueno.  
+Haciendo una comparación con el Suavizado Add-One, concluimos que el Suavizado por Interpolación funciona mucho mejor.  
+
+
 ### Test para Log-Probability, Cross-Entropy, Perplexity
 
 Se implementaron un total de 6 tests nuevo para probar la funcionalidad de *log_probability*, *cross-entropy* y *perplexity*, se distribuyeron de la siguiente manera:
@@ -307,6 +402,10 @@ Para su implementación nos basamos en las oraciones ya provistas en los test y 
 Una vez obtenido la *log_probability* se las dividió por la cantidad de palabras de las oraciones, así obteniendo los valores de *cross_entropy*.
 
 #### Test Perplexity
-Ya obtenido la *cross_entropy* en los test anteriores se realizo el calculo de la perplexity mostrado anteriormente, así obtenido los valores de la *perplexity*
+Ya obtenido la *cross_entropy* en los test anteriores se realizo el calculo de la perplexity mostrado anteriormente, así obteniendo los valores de la *perplexity*.
+
+
 
 [Método de la transformada inversa]: https://es.wikipedia.org/wiki/M%C3%A9todo_de_la_transformada_inversa
+[Notas de Michael Collins]: http://www.cs.columbia.edu/~mcollins/lm-spring2013.pdf
+[Modelado de Lenguaje: Notas Complementarias]: https://cs.famaf.unc.edu.ar/~francolq/lm-notas.pdf

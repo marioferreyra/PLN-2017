@@ -363,7 +363,6 @@ class InterpolatedNGram(NGram):
         if gamma is None:
             sents, held_out = self.getHeldOut(sents)
 
-        # addone = False # HARDCODE
         # models[0] = alguno de los modelos
         if addone:
             models.append(AddOneNGram(1, sents))
@@ -403,15 +402,8 @@ class InterpolatedNGram(NGram):
     def getGamma(self, held_out):
         """
         Calculamos un gamma a partir de un held_out de datos.
-        Ya que:
-        1) El valor para Gamma puede ser elegido de nuevo maximizando la
-           log-probability de un held-out data
 
-        2) El valor para Gamma puede ser elegido de nuevo minimizar la
-           perplexity de un held-out data
-
-        Notar que (1) y (2) son equivalentes, pero hacer (1) lleva menos
-        operaciones, por ello implementaremos (1).
+        held_out -- datos para calcular gamma.
         """
         self.gamma = 1  # Valor inicial de gamma
         # log-probability calculada con el gamma actusl
@@ -555,7 +547,10 @@ class BackOffNGram(NGram):
 
         # Diccionario de conjuntos
         # self.conjunto_A = conjunto_A = defaultdict(set)
-        # self.conjunto_A = conjunto_A = dict()
+        self.set_A = set_A = dict()
+        # for i in range(1, n): # [1 ... n-1] --> [2-grama, 3-grama,..., n-grama]
+        #     my_model = models[i]
+        #     for tokens in my_model
 
     def A(self, tokens):
         """
