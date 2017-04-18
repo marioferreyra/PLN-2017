@@ -546,11 +546,17 @@ class BackOffNGram(NGram):
             models.append(NGram(i, sents))
 
         # Diccionario de conjuntos
-        # self.conjunto_A = conjunto_A = defaultdict(set)
         self.set_A = set_A = dict()
-        # for i in range(1, n): # [1 ... n-1] --> [2-grama, 3-grama,..., n-grama]
-        #     my_model = models[i]
-        #     for tokens in my_model
+        for i in range(1, n): # [1 ... n-1] --> [2-grama, 3-grama,..., n-grama]
+            my_model = models[i]
+            for tokens in my_model.counts.keys():
+                if len(tokens) == i+1:
+                    if tokens[:-1] not in set_A:
+                        set_A[tokens[:-1]] = set()
+                    set_A[tokens[:-1]].add(tokens[-1])
+
+        for i in set_A.items():
+            print(i)
 
     def A(self, tokens):
         """
@@ -558,7 +564,7 @@ class BackOffNGram(NGram):
 
         tokens -- the k-gram tuple.
         """
-        pass
+        return self.set_A[tuple(tokens)]
 
     def alpha(self, tokens):
         """
@@ -592,5 +598,5 @@ class BackOffNGram(NGram):
 
 # ==============
 # PARA BACKOFF
-# sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
-# back = BackOffNGram(1, sents)
+sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
+backoff = BackOffNGram(2, sents, beta=0.5)
