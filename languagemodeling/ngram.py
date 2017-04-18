@@ -355,7 +355,7 @@ class InterpolatedNGram(NGram):
         super().__init__(n, sents)
 
         self.gamma = gamma
-        self.models = models = []  # Listas de modelos, para la interpolacion
+        self.models = []  # Listas de modelos, para la interpolacion
 
         # Ponemos esta linea aca porque en caso de que no den el gamma,
         # separamos el held_out, y calculamos los modelos sin el held_out
@@ -363,8 +363,26 @@ class InterpolatedNGram(NGram):
         if gamma is None:
             sents, held_out = self.getHeldOut(sents)
 
+        self.models = self.getModels(n, sents, addone)
+
+        # Ponemos esta linea aca porque para obtener el gamma necesitamos
+        # calcular la log-probability, que usa nuestro cond_prob, que esto a la
+        # vez usa nuestros modelos, entonces necesitamos los modelos
+        if gamma is None:
+            self.gamma = self.getGamma(held_out)
+
+    def getModels(self, n, sents, is_addone):
+        """
+        Calcula la lista de modelos talque:
+                models = [1-grama, 2-grama, ... , n-grama]
+
+        n -- order of the model.
+        sents -- list of sentences, each one being a list of tokens.
+        addone -- whether to use addone smoothing.
+        """
+        models = []
         # models[0] = alguno de los modelos
-        if addone:
+        if is_addone:
             models.append(AddOneNGram(1, sents))
         else:
             models.append(NGram(1, sents))
@@ -373,13 +391,7 @@ class InterpolatedNGram(NGram):
             # [2, 3, ..., n]
             models.append(NGram(i, sents))
 
-        # models = [1-grama, 2-grama, ... , n-grama]
-
-        # Ponemos esta linea aca porque para obtener el gamma necesitamos
-        # calcular la log-probability, que usa nuestro cond_prob, que esto a la
-        # vez usa nuestros modelos, entonces necesitamos los modelos
-        if gamma is None:
-            self.gamma = self.getGamma(held_out)
+        return models
 
     def getHeldOut(self, sents, percentage=0.1):
         """
@@ -420,7 +432,9 @@ class InterpolatedNGram(NGram):
                 break
 
             log_prob_to_max = my_log_prob
-            new_gamma = self.gamma # El gamma correspondiente a log_prob_to_max
+
+            # El gamma correspondiente a log_prob_to_max
+            new_gamma = self.gamma
 
             # Calculamos la nueva log-probability
             # Vamos probando de 100 en 100
@@ -457,13 +471,12 @@ class InterpolatedNGram(NGram):
 
         tokens -- tokens para el calculo de los lambdas
         """
-        models = self.models
         gamma = self.gamma
 
         lambdas = []  # Lista de lambdas
-        for i in range(len(tokens)):
-            # [0, 1, 2, ..., len(tokens)-1]
-            sumatoria = sum(lambdas[j] for j in range(0, i)) # [0, 1, ..., i-1]
+        for i in range(len(tokens)):  # [0, 1, 2, ..., len(tokens)-1]
+            # [0, 1, ..., i-1]
+            sumatoria = sum(lambdas[j] for j in range(0, i))
             # c = float(models[i].count(tuple(tokens[i:])))
             c = float(self.count(tuple(tokens[i:])))
             lambdas.append((1 - sumatoria) * (c/(c + gamma)))
@@ -527,13 +540,6 @@ class BackOffNGram(NGram):
         super().__init__(n, sents)
 
         self.beta = beta
-
-        # ESTO LO HAGO DESPUES, NO ENTIENDO COMO ESTIMAR EL BETA
-        # ES PARECIDO AL DE INTERPOLATE
-        # if beta is None:
-        #     sents, held_out = self.getHeldOut(sents)
-        #     self.gamma = self.getGamma(held_out)
-
         self.models = models = []  # Listas de modelos, para la interpolacion
 
         if addone:
@@ -547,9 +553,10 @@ class BackOffNGram(NGram):
 
         # Diccionario de conjuntos
         self.set_A = set_A = dict()
-        for i in range(1, n): # [1 ... n-1] --> [2-grama, 3-grama,..., n-grama]
-            my_model = models[i]
-            for tokens in my_model.counts.keys():
+        for i in range(1, n):  # [1 ... n-1] => [2-grama, 3-grama,..., n-grama]
+            # print("I =", i, models[i], "|| N =", models[i].n)
+            for tokens in models[i].counts.keys():
+                # print("I =", i, models[i], "|| N =", models[i].n, tokens)
                 if len(tokens) == i+1:
                     if tokens[:-1] not in set_A:
                         set_A[tokens[:-1]] = set()
@@ -599,4 +606,4 @@ class BackOffNGram(NGram):
 # ==============
 # PARA BACKOFF
 sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
-backoff = BackOffNGram(2, sents, beta=0.5)
+backoff = BackOffNGram(3, sents, beta=0.5)
