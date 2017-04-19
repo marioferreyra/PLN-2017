@@ -553,17 +553,48 @@ class BackOffNGram(NGram):
 
         # Diccionario de conjuntos
         self.set_A = set_A = dict()
-        for i in range(1, n):  # [1 ... n-1] => [2-grama, 3-grama,..., n-grama]
-            # print("I =", i, models[i], "|| N =", models[i].n)
-            for tokens in models[i].counts.keys():
-                # print("I =", i, models[i], "|| N =", models[i].n, tokens)
-                if len(tokens) == i+1:
-                    if tokens[:-1] not in set_A:
-                        set_A[tokens[:-1]] = set()
-                    set_A[tokens[:-1]].add(tokens[-1])
+        if addone and n==1:
+            self.my_model = AddOneNGram(self.n, sents)
+        else:
+            self.my_model = NGram(self.n, sents)
+        # self.my_model = NGram(self.n, sents)
+        for tokens in self.my_model.counts.keys():
+            if len(tokens) == self.n:
+                if tokens[:-1] not in set_A:
+                    set_A[tokens[:-1]] = set()
+                set_A[tokens[:-1]].add(tokens[-1])
 
-        for i in set_A.items():
-            print(i)
+        # for i in range(1, n):  # [1 ... n-1] => [2-grama, 3-grama,..., n-grama]
+        #     for tokens in models[i].counts.keys():
+        #         if len(tokens) == i+1:
+        #             if tokens[:-1] not in set_A:
+        #                 set_A[tokens[:-1]] = set()
+        #             set_A[tokens[:-1]].add(tokens[-1])
+
+        # for i in set_A.items():
+        #     print(i)
+
+    def count(self, tokens):
+        """
+        Count for an k-gram with 0 < k < n+1
+
+        tokens -- the k-gram tuple.
+        """
+        # Tengo que analizar a que n-grama pertenece el tokens,
+        # para ellos usamos su largo
+        # Ejemplo: ["el", "gato", "come"] len = 3 --> 3-grama
+        # ["el", "gato"] len = 2 --> 2-grama
+        # ["el"] len = 1 --> 1-grama
+        length_token = len(tokens)
+
+        # Si es "vacio" pertenece a un 1-grama
+        if tokens == ():
+            length_token = 1
+
+        model = self.models[length_token-1]
+
+        # return model.count(tokens)
+        return self.my_model.count(tuple(tokens))
 
     def A(self, tokens):
         """
@@ -579,7 +610,16 @@ class BackOffNGram(NGram):
 
         tokens -- the k-gram tuple.
         """
-        pass
+        alpha = 1
+        cardinal_A = len(self.A(tokens))
+        # A(x1 ... xi) != Vacio
+        if cardinal_A != 0:
+            beta = self.beta
+            c = self.count(tokens)
+            # print("Tokens =", tokens, "=>", "|A| = 0.5 *", cardinal_A, "/", c)
+            alpha = (beta * cardinal_A) / float(c)
+
+        return alpha
 
     def denom(self, tokens):
         """
@@ -587,7 +627,49 @@ class BackOffNGram(NGram):
 
         tokens -- the k-gram tuple.
         """
-        pass
+        sumatoria = 0
+        for x in self.A(tokens):
+            # Problema de division por 0
+            sumatoria += self.cond_prob(x, tokens[1:])
+
+        denom = 1 - sumatoria
+
+        return denom
+
+    def cond_prob(self, token, prev_tokens=None):
+        """
+        Conditional probability of a token.
+
+        token -- the token.
+        prev_tokens -- the previous n-1 tokens (optional only if n = 1).
+        """
+        # token = xi
+        # token = x1 ... xi-1
+        probability = 0
+
+        # Analizamos los casos expuestos en las notas
+        # Caso i = 1
+        if not prev_tokens:
+            probability = self.count([token]) / float(self.count([]))
+        # Casos i > 1, es decir, i >= 2
+        else:
+            # xi pertenece a A(x1 ... xi-1)
+            if token in self.A(prev_tokens):
+                my_token = prev_tokens + [token]
+                c_estrella = self.count(my_token) - self.beta
+                c = self.count(prev_tokens)
+                probability = c_estrella / float(c)
+            # xi pertenece a B(x1 ... xi-1)
+            # Como no pertenece a las palabras talque count(palabra) > 0
+            # Entonces pertenece a las palabras talque count(palabra) = 0
+            else:
+                new_prev_tokens = prev_tokens[1:]
+                alpha = self.alpha(prev_tokens)
+                q_D = self.cond_prob(token, new_prev_tokens) # CONTROLAR EN EL CASO QUE SEA CERO
+                denom = self.denom(prev_tokens)
+                probability = alpha * (q_D / float(denom))
+
+        return probability
 
 
 
@@ -605,5 +687,7 @@ class BackOffNGram(NGram):
 
 # ==============
 # PARA BACKOFF
-sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
-backoff = BackOffNGram(3, sents, beta=0.5)
+# sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
+# backoff = BackOffNGram(2, sents, beta=0.5)
+# backoff.alpha(('gato',))
+# backoff.denom(("el",))
