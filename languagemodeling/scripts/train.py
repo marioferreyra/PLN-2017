@@ -12,7 +12,6 @@ Options:
                   addone: N-grams with add-one smoothing.
                   inter: N-grams with interpolation smoothing.
                   backoff: N-grams with back-off smoothing (with discounting).
-                  # La opcion back-off todavia no esta implementada
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
@@ -21,7 +20,8 @@ import pickle
 from docopt import docopt
 from nltk.corpus import PlaintextCorpusReader  # Para cargar el corpus
 from nltk.tokenize import RegexpTokenizer  # Tokenizador
-from languagemodeling.ngram import NGram, AddOneNGram, InterpolatedNGram
+from languagemodeling.ngram import NGram, AddOneNGram
+from languagemodeling.ngram import InterpolatedNGram, BackOffNGram
 
 
 if __name__ == '__main__':
@@ -50,14 +50,19 @@ if __name__ == '__main__':
     n = int(opts['-n'])
     m = str(opts['-m'])
 
-    # Podemos usar los N-Gramas clasicos o N-Gramas con el suavizado AddOne
+    # Podemos usar los N-Gramas clasicos, N-Gramas suavizado AddOne,
+    # N-Gramas suavizado por Interpolacion o N-Gramas suavizado por Back-Off
     if m == "addone":
+        print("##### Suavizado AddOne #####")
         model = AddOneNGram(n, sents)
     elif m == "inter":
+        print("##### Suavizado por Interpolacion #####")
         model = InterpolatedNGram(n, sents)
-    # elif m == "backoff":
-    #     model = BackOffNGram(n, sents)
+    elif m == "backoff":
+        print("##### Suavizado por Back-Off #####")
+        model = BackOffNGram(n, sents)
     else:
+        print("##### N-Gramas clasicos #####")
         model = NGram(n, sents)
 
     # Save it
