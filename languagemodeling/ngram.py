@@ -4,13 +4,14 @@ from math import log
 from random import random
 
 
-def addDelimiters(sent, n):
+def addMarkers(sent, n):
     """
-    Agrega a una oracion n-1 delimitadores <s> al comienzo y
-    un delimitador </s> al final.
+    Agrega a una oracion:
+                        * n-1 marcadores <s> al comienzo y
+                        * 1 marcadores </s> al final.
     """
-    sent = ["<s>"] * (n-1) + sent  # Marcador de comienzo de oracion
-    sent += ["</s>"]  # Marcador de final de oracion
+    # Añadimos marcadores de comienzo y fin de oracion.
+    sent = ["<s>"]*(n-1) + sent + ["</s>"]
 
     return sent
 
@@ -42,7 +43,7 @@ class NGram(object):
 
         # Iteramos sobre cada oracion del conjunto de oraciones
         for sent in sents:
-            sent = addDelimiters(sent, n)
+            sent = addMarkers(sent, n)
             # Iteramos sobre cada palabra de la oracion
             for i in range(len(sent) - n + 1):
                 ngram = tuple(sent[i: i + n])
@@ -97,7 +98,7 @@ class NGram(object):
         sent -- the sentence as a list of tokens.
         """
         n = self.n
-        sent = addDelimiters(sent, n)
+        sent = addMarkers(sent, n)
         probability = 1  # Se inicializa en 1 por la productoria
         m = len(sent)  # Tamaño de la oracion
 
@@ -132,7 +133,7 @@ class NGram(object):
         sent -- the sentence as a list of tokens.
         """
         n = self.n
-        sent = addDelimiters(sent, n)
+        sent = addMarkers(sent, n)
         probability = 0  # Se inicializa en 0 por la sumatoria de logaritmos
 
         # Iteramos sobre cada oracion del conjunto de oraciones
@@ -427,7 +428,7 @@ class InterpolatedNGram(NGram):
         log_prob_to_max = float("-inf")
 
         while True:
-            # Se logro maximizar log_probability
+            # Si maximize la log_probability
             if log_prob_to_max >= my_log_prob:
                 break
 
@@ -552,17 +553,16 @@ class BackOffNGram(NGram):
             sents, held_out = self.getHeldOut(sents)
 
         # Listas de modelos, para la obtencion del conjunto A
-        # self.models = models = self.getModels(n, sents, addone)
         self.models = self.getModels(n, sents, addone)
+
+        # Diccionario de conjuntos
+        self.set_A = self.generateSetA(n, self.models)
 
         # Ponemos esta linea aca porque para obtener el gamma necesitamos
         # calcular la log-probability, que usa nuestro cond_prob, que esto a la
         # vez usa nuestros modelos, entonces necesitamos los modelos
         if beta is None:
             self.beta = self.getBeta(held_out)
-
-        # Diccionario de conjuntos
-        self.set_A = self.generateSetA(n, self.models)
 
         # for i in self.set_A.items():
         #     print(i)
@@ -612,7 +612,36 @@ class BackOffNGram(NGram):
 
         held_out -- datos para calcular beta.
         """
-        pass
+        self.beta = 1  # Valor inicial de gamma
+        # log-probability calculada con el gamma actual
+        my_log_prob = self.log_probability(held_out)
+
+        # log-probability a maximizar
+        # Notar que la menor log-probability que puede haber
+        # es -inf por el logaritmo
+        log_prob_to_max = float("-inf")
+
+        new_beta = self.beta
+
+        while True:
+            # Si maximize la log_probability
+            if log_prob_to_max >= my_log_prob:
+                break
+
+            log_prob_to_max = my_log_prob
+
+            # El beta correspondiente a log_prob_to_max
+            new_beta = self.beta
+
+            # Calculamos la nueva log-probability
+            # Vamos probando de 0.25 en 0.25
+            self.beta += 0.25
+            my_log_prob = self.log_probability(held_out)
+
+        # beta tiene que estar en el rango [0, 1]
+        assert 0 <= new_beta and new_beta <= 1
+
+        return new_beta
 
     def generateSetA(self, n, models):
         """
@@ -759,7 +788,10 @@ class BackOffNGram(NGram):
         return probability
 
 # PARA BACKOFF
-# sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
-# backoff = BackOffNGram(3, sents, beta=0.5)
+# oracion01 = 'el gato come pescado .'.split()
+# oracion02 = 'la gata come salmón .'.split()
+# sents = [oracion01, oracion02]
+# backoff = BackOffNGram(2, sents)
+# b = backoff.getBeta(oracion02)
 # backoff.alpha(('gato',))
 # backoff.denom(("<s>",))
