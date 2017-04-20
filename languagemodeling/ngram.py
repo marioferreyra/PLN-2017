@@ -548,10 +548,10 @@ class BackOffNGram(NGram):
         # Ponemos esta linea aca porque en caso de que no den el gamma,
         # separamos el held_out, y calculamos los modelos sin el held_out
         # porque si se los dejamos falla el ultimo test
-        print("Computando Held-Out")
+        # print("Computando Held-Out")
         if beta is None:
             sents, held_out = self.getHeldOut(sents)
-        print("Termine de computar el Held-Out")
+        # print("Termine de computar el Held-Out")
 
         # Listas de modelos, para la obtencion del conjunto A
         print("Computando Modelos")
@@ -563,6 +563,10 @@ class BackOffNGram(NGram):
         self.set_A = self.generateSetA(n, self.models)
         print("Termine de computar el conjunto A")
 
+        # Diccionarios para los valores de alpha y denom
+        self.dict_denom = defaultdict(float)
+        self.dict_alpha = defaultdict(float)
+
         # Ponemos esta linea aca porque para obtener el gamma necesitamos
         # calcular la log-probability, que usa nuestro cond_prob, que esto a la
         # vez usa nuestros modelos, entonces necesitamos los modelos
@@ -570,6 +574,9 @@ class BackOffNGram(NGram):
         if beta is None:
             self.beta = self.getBeta(held_out)
         print("Termine de computar el mejor Beta")
+
+        self.generateDictAlpha()
+        self.generateDictDenom()
 
         # for i in self.set_A.items():
         #     print(i)
@@ -624,6 +631,8 @@ class BackOffNGram(NGram):
         held_out -- datos para calcular beta.
         """
         self.beta = 0.0
+        self.generateDictAlpha()
+        self.generateDictDenom()
         max_log_prob = self.log_probability(held_out)  # Candidato a maximo
 
         # Rango de betas a probar de 0,1 en 0,1 hasta 1
@@ -633,6 +642,8 @@ class BackOffNGram(NGram):
         best_beta = self.beta
         for beta in betas:
             self.beta = beta
+            self.generateDictAlpha()
+            self.generateDictDenom()
             my_log_prob = self.log_probability(held_out)
             print("Beta =", self.beta, "==> Log-Prob =", my_log_prob)
             # Si my_log_prob es mas grande que mi candidato, lo seteo como maximo
@@ -725,21 +736,42 @@ class BackOffNGram(NGram):
         """
         return self.set_A[tuple(tokens)]
 
+    def generateDictAlpha(self):
+        """
+        Generamos el diccionario con los valores de alfa.
+        """
+        # for tokens in self.count.key(): # DUDA
+        for tokens in self.set_A.keys(): # DUDA
+            alpha = 1
+            cardinal_A = len(self.A(tokens))
+            
+            # Si A(x1 ... xi) != Vacio
+            if cardinal_A != 0:
+                beta = self.beta
+                c = self.count(tuple(tokens))
+                alpha = (beta * cardinal_A) / float(c)
+
+                self.dict_alpha[tuple(tokens)] = alpha
+
+    def generateDictDenom(self):
+        """
+        Normalization factor for a k-gram with 0 < k < n.
+
+        tokens -- the k-gram tuple.
+        """
+        # for tokens in self.count.key(): # DUDA
+        for tokens in self.set_A.keys(): # DUDA
+            s = sum(self.cond_prob(x, tokens[1:]) for x in self.A(tokens))
+            denom = 1 - s
+            self.dict_denom[tokens] = denom
+
     def alpha(self, tokens):
         """
         Missing probability mass for a k-gram with 0 < k < n.
 
         tokens -- the k-gram tuple.
         """
-        alpha = 1
-        cardinal_A = len(self.A(tokens))
-        # Si A(x1 ... xi) != Vacio
-        if cardinal_A != 0:
-            beta = self.beta
-            c = self.count(tuple(tokens))
-            alpha = (beta * cardinal_A) / float(c)
-
-        return alpha
+        return self.dict_alpha.get(tokens, 1.0)
 
     def denom(self, tokens):
         """
@@ -747,9 +779,7 @@ class BackOffNGram(NGram):
 
         tokens -- the k-gram tuple.
         """
-        denom = 1 - sum(self.cond_prob(x, tokens[1:]) for x in self.A(tokens))
-
-        return denom
+        return self.dict_denom.get(tokens, 1.0)
 
     def cond_prob(self, token, prev_tokens=None):
         """
@@ -760,6 +790,7 @@ class BackOffNGram(NGram):
         """
         # token = xi
         # prev_tokens = x1 ... xi-1
+
         probability = 0
 
         # Analizamos los casos expuestos en las notas
@@ -767,13 +798,16 @@ class BackOffNGram(NGram):
 
         # Caso i = 1
         if not prev_tokens:
-            probability = (self.count(tuple([token])) + 1) / ( float(self.count(())) + self.models[0].V())
+            # probability = (self.count(tuple([token])) + 1) / ( float(self.count(())) + self.models[0].V())
+            probability = self.count(tuple([token])) / float(self.count(()))
 
         # Casos i > 1, es decir, i >= 2
         else:
             # Si xi ∈ A(x1 ... xi-1)
             if token in self.A(prev_tokens):
-                my_token = prev_tokens + [token]
+                # print(type(prev_tokens), type([token]))
+                # print(prev_tokens, [token])
+                my_token = list(prev_tokens) + [token]
                 c_estrella = self.count(tuple(my_token)) - self.beta
                 c = self.count(tuple(prev_tokens))
                 probability = c_estrella / float(c)
@@ -782,23 +816,12 @@ class BackOffNGram(NGram):
             # Entonces pertenece a las palabras talque count(palabra) = 0
             else:
                 new_prev_tokens = prev_tokens[1:]  # x2 ... xi-1
-                alpha = self.alpha(prev_tokens)
+                alpha = self.alpha(tuple(prev_tokens))
                 q_D = self.cond_prob(token, new_prev_tokens)
 
                 # Caso en que el denominador q_D es 0
                 if q_D != 0:
-                    denom = self.denom(prev_tokens)
-                    probability = alpha * (q_D / float(denom))
+                    denom = self.denom(tuple(prev_tokens))
+                    probability = alpha * (q_D / denom)
 
         return probability
-
-# PARA BACKOFF
-# sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split(),]
-# backoff = BackOffNGram(2, sents)
-# print(backoff.getBeta(['la gata come salmón .'.split()]))
-# backoff.alpha(('gato',))
-# backoff.denom(("<s>",))
-
-# inter = InterpolatedNGram(3, sents) # Teoricamente anda probar otro rango de lambdas
-
-# print("Max LP =", max_log_prob, "||", "My LP =", my_log_prob, "|| Beta =", self.beta, "||", "Best Beta =", best_beta)
