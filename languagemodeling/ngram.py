@@ -355,7 +355,6 @@ class InterpolatedNGram(NGram):
         super().__init__(n, sents)
 
         self.gamma = gamma
-        self.models = []  # Listas de modelos, para la interpolacion
 
         # Ponemos esta linea aca porque en caso de que no den el gamma,
         # separamos el held_out, y calculamos los modelos sin el held_out
@@ -363,6 +362,7 @@ class InterpolatedNGram(NGram):
         if gamma is None:
             sents, held_out = self.getHeldOut(sents)
 
+        # Listas de modelos, para la interpolacion
         self.models = self.getModels(n, sents, addone)
 
         # Ponemos esta linea aca porque para obtener el gamma necesitamos
@@ -381,7 +381,6 @@ class InterpolatedNGram(NGram):
         addone -- whether to use addone smoothing.
         """
         models = []
-        # models[0] = alguno de los modelos
         if is_addone:
             models.append(AddOneNGram(1, sents))
         else:
@@ -406,7 +405,7 @@ class InterpolatedNGram(NGram):
 
         # El resto de oraciones
         new_sents = sents[:rest]
-        # El porcentaje de oraciones que quiero, tomo de las ultimas oraciones
+        # El porcentaje de oraciones que quiero (tomo de las ultimas oraciones)
         held_out = sents[rest:]
 
         return new_sents, held_out
@@ -540,9 +539,40 @@ class BackOffNGram(NGram):
         super().__init__(n, sents)
 
         self.beta = beta
-        self.models = models = []  # Listas de modelos, para la interpolacion
 
-        if addone:
+        # Ponemos esta linea aca porque en caso de que no den el gamma,
+        # separamos el held_out, y calculamos los modelos sin el held_out
+        # porque si se los dejamos falla el ultimo test
+        if beta is None:
+            sents, held_out = self.getHeldOut(sents)
+
+        # Listas de modelos, para la obtencion del conjunto A
+        # self.models = models = self.getModels(n, sents, addone)
+        self.models = self.getModels(n, sents, addone)
+
+        # Ponemos esta linea aca porque para obtener el gamma necesitamos
+        # calcular la log-probability, que usa nuestro cond_prob, que esto a la
+        # vez usa nuestros modelos, entonces necesitamos los modelos
+        if beta is None:
+            self.beta = self.getBeta(held_out)
+
+        # Diccionario de conjuntos
+        self.set_A = self.generateSetA(n, self.models)
+
+        # for i in self.set_A.items():
+        #     print(i)
+
+    def getModels(self, n, sents, is_addone):
+        """
+        Calcula la lista de modelos talque:
+                models = [1-grama, 2-grama, ... , n-grama]
+
+        n -- order of the model.
+        sents -- list of sentences, each one being a list of tokens.
+        addone -- whether to use addone smoothing.
+        """
+        models = []
+        if is_addone:
             models.append(AddOneNGram(1, sents))
         else:
             models.append(NGram(1, sents))
@@ -551,28 +581,45 @@ class BackOffNGram(NGram):
             # [2, 3, ..., n]
             models.append(NGram(i, sents))
 
-        # Diccionario de conjuntos
-        self.set_A = set_A = dict()
-        if addone and n==1:
-            self.my_model = AddOneNGram(self.n, sents)
-        else:
-            self.my_model = NGram(self.n, sents)
-        # self.my_model = NGram(self.n, sents)
-        for tokens in self.my_model.counts.keys():
-            if len(tokens) == self.n:
-                if tokens[:-1] not in set_A:
-                    set_A[tokens[:-1]] = set()
-                set_A[tokens[:-1]].add(tokens[-1])
+        return models
 
-        # for i in range(1, n):  # [1 ... n-1] => [2-grama, 3-grama,..., n-grama]
-        #     for tokens in models[i].counts.keys():
-        #         if len(tokens) == i+1:
-        #             if tokens[:-1] not in set_A:
-        #                 set_A[tokens[:-1]] = set()
-        #             set_A[tokens[:-1]].add(tokens[-1])
+    def getHeldOut(self, sents, percentage=0.1):
+        """
+        Obtine los datos Held Out de una lista de oraciones
+        segun un porcentaje dado.
 
-        # for i in set_A.items():
-        #     print(i)
+        sents -- listas oraciones
+        percentage -- porcentaje a tomar de las oraciones (default: 10%)
+        """
+        # Lo que no quiero para el held_out
+        rest = int((1 - percentage) * len(sents))
+
+        # El resto de oraciones
+        new_sents = sents[:rest]
+        # El porcentaje de oraciones que quiero (tomo de las ultimas oraciones)
+        held_out = sents[rest:]
+
+        return new_sents, held_out
+
+    def getBeta(self, held_out):
+        pass
+
+    def generateSetA(self, n, models):
+        # set_A = dict()
+        set_A = defaultdict(set)
+        for i in range(1, n):  # [1 ... n-1] => [2-grama, 3-grama,..., n-grama]
+            for tokens, value in models[i].counts.items():
+                # (x1 ... xi x) ∈ (i+1)-grama y count(x1 ... xi x)>0
+                if len(tokens) == i+1 and value > 0:
+                    # Ultimo elemento = x
+                    x = tokens[-1]
+                    # Todos menos el ultimo elemento = x1 ... xi
+                    x_i = tokens[:-1]
+                    if x_i not in set_A:
+                        set_A[x_i] = set()
+                    set_A[x_i].add(x)
+
+        return set_A
 
     def count(self, tokens):
         """
@@ -591,10 +638,27 @@ class BackOffNGram(NGram):
         if tokens == ():
             length_token = 1
 
-        model = self.models[length_token-1]
+        # Si me como la tupla del tipo (<s>, <s>, ...), por como tenemos
+        # definido la inclusion de los marcadores (n-1 <s> al inicio donde el
+        # el n es el correspondiente al de n-grama), tenemos que pasarle dicho
+        # tokens al de n-grama correspondienrte, es decir:
+        #       (<s>,) corresponde a 2-grama
+        #       (<s>, <s>) corresponde a 3-grama
+        #       (<s>, <s>, <s>) corresponde a 4-grama
+        # y asi sucesivamente
+        # tokens.count("<s>") == length_token : quiere decir que la tupla
+        # contiene solamente palabras del tipo <s>
+        if tokens.count("<s>") == length_token:
+            length_token = tokens.count("<s>") + 1
+            # print(length_token)
 
-        # return model.count(tokens)
-        return self.my_model.count(tuple(tokens))
+
+        model = self.models[length_token-1]
+        # print(length_token, "=>", length_token-1 ,"||" , tokens, model.count(tokens))
+        # print("=========================")
+        # print(model.counts)
+
+        return model.count(tokens)
 
     def A(self, tokens):
         """
@@ -615,7 +679,7 @@ class BackOffNGram(NGram):
         # A(x1 ... xi) != Vacio
         if cardinal_A != 0:
             beta = self.beta
-            c = self.count(tokens)
+            c = self.count(tuple(tokens))
             # print("Tokens =", tokens, "=>", "|A| = 0.5 *", cardinal_A, "/", c)
             alpha = (beta * cardinal_A) / float(c)
 
@@ -629,6 +693,7 @@ class BackOffNGram(NGram):
         """
         sumatoria = 0
         for x in self.A(tokens):
+            # print(tokens)
             # Problema de division por 0
             sumatoria += self.cond_prob(x, tokens[1:])
 
@@ -645,19 +710,24 @@ class BackOffNGram(NGram):
         """
         # token = xi
         # token = x1 ... xi-1
+        # print("token =", token, "|| count =", self.count([token]))
+        # print("prev_tokens =", prev_tokens, "|| count =", self.count(prev_tokens))
+        # print("==========================")
         probability = 0
+
+        # print("==>", token, prev_tokens)
 
         # Analizamos los casos expuestos en las notas
         # Caso i = 1
         if not prev_tokens:
-            probability = self.count([token]) / float(self.count([]))
+            probability = self.count(tuple([token])) / float(self.count(()))
         # Casos i > 1, es decir, i >= 2
         else:
             # xi pertenece a A(x1 ... xi-1)
             if token in self.A(prev_tokens):
                 my_token = prev_tokens + [token]
-                c_estrella = self.count(my_token) - self.beta
-                c = self.count(prev_tokens)
+                c_estrella = self.count(tuple(my_token)) - self.beta
+                c = self.count(tuple(prev_tokens))
                 probability = c_estrella / float(c)
             # xi pertenece a B(x1 ... xi-1)
             # Como no pertenece a las palabras talque count(palabra) > 0
@@ -665,29 +735,16 @@ class BackOffNGram(NGram):
             else:
                 new_prev_tokens = prev_tokens[1:]
                 alpha = self.alpha(prev_tokens)
-                q_D = self.cond_prob(token, new_prev_tokens) # CONTROLAR EN EL CASO QUE SEA CERO
-                denom = self.denom(prev_tokens)
-                probability = alpha * (q_D / float(denom))
+                q_D = self.cond_prob(token, new_prev_tokens)
+
+                if q_D != 0: # Caso division por 0
+                    denom = self.denom(prev_tokens)
+                    probability = alpha * (q_D / float(denom))
 
         return probability
 
-
-
-
-# sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
-# my_model = InterpolatedNGram(2, sents)
-# print(my_model.count(()))
-# my_model.getGamma("la gata come salmón .".split())
-# my_model.cond_prob("pescado", ["come"])
-
-# TEST LAMBDAS
-# print("New", NGram(2, sents).cond_prob("pescado", ["come"]))
-# print("New02", NGram(1, sents).cond_prob("pescado"))
-# print (my_model.getLambdas(["come"]))
-
-# ==============
 # PARA BACKOFF
 # sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split()]
-# backoff = BackOffNGram(2, sents, beta=0.5)
+# backoff = BackOffNGram(3, sents, beta=0.5)
 # backoff.alpha(('gato',))
-# backoff.denom(("el",))
+# backoff.denom(("<s>",))
