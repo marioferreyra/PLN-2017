@@ -2,7 +2,7 @@
 from collections import defaultdict
 from math import log
 from random import random
-
+import numpy as np  # Para generar lista de floats
 
 def addMarkers(sent, n):
     """
@@ -141,6 +141,8 @@ class NGram(object):
             token = sent[i]  # wi : primera palabra
             prev_tokens = sent[i-n+1:i]  # Markov Assumption: wi-k ... wi-1
             x = self.cond_prob(token, prev_tokens)
+            # if x == 0.0:
+            #     import pdb; pdb.set_trace()
             probability += log2Extended(x)
 
         return probability
@@ -367,9 +369,15 @@ class InterpolatedNGram(NGram):
         # Listas de modelos, para la interpolacion
         self.models = self.getModels(n, sents, addone)
 
+        # Revertimos los modelos porque empezamos de los modelos mas altos a
+        # a los mas bajos, es decir:
+        #       reversed_models = [n-grama, (n-1)-grama, ..., 1-grama]
+        self.reversed_models = list(reversed(self.models))
+
         # Ponemos esta linea aca porque para obtener el gamma necesitamos
         # calcular la log-probability, que usa nuestro cond_prob, que esto a la
         # vez usa nuestros modelos, entonces necesitamos los modelos
+        print("Computando Gammas\n")
         if gamma is None:
             self.gamma = self.getGamma(held_out)
 
@@ -418,31 +426,28 @@ class InterpolatedNGram(NGram):
 
         held_out -- datos para calcular gamma.
         """
-        self.gamma = 1  # Valor inicial de gamma
-        # log-probability calculada con el gamma actual
-        my_log_prob = self.log_probability(held_out)
+        # gammas = [(i+1)*10 for i in range(10)]
+        self.gamma = 1
+        max_log_prob = self.log_probability(held_out)  # Candidato a maximo
 
-        # log-probability a maximizar
-        # Notar que la menor log-probability que puede haber
-        # es -inf por el logaritmo
-        log_prob_to_max = float("-inf")
+        # Rango de gammas a probar de 100 en 100 hasta 1000
+        gammas = [i for i in range(100, 1100, 100)]
 
-        while True:
-            # Si maximize la log_probability
-            if log_prob_to_max >= my_log_prob:
-                break
-
-            log_prob_to_max = my_log_prob
-
-            # El gamma correspondiente a log_prob_to_max
-            new_gamma = self.gamma
-
-            # Calculamos la nueva log-probability
-            # Vamos probando de 100 en 100
-            self.gamma += 100
+        print("Gamma =", self.gamma, "==> Log-Prob =", max_log_prob)
+        best_gamma = self.gamma
+        for gamma in gammas:
+            self.gamma = gamma
             my_log_prob = self.log_probability(held_out)
 
-        return new_gamma
+            print("Gamma =", self.gamma, "==> Log-Prob =", my_log_prob)
+            # Si my_log_prob es mas grande que mi candidato, lo seteo como maximo
+            if max_log_prob < my_log_prob:
+                max_log_prob = my_log_prob
+                best_gamma = self.gamma
+
+        print("\nMejor Gamma =", best_gamma)
+
+        return best_gamma
 
     def count(self, tokens):
         """
@@ -502,7 +507,6 @@ class InterpolatedNGram(NGram):
         # token = xn
         # prev_tokens = x1 ... xn-1
         n = self.n
-        models = self.models
 
         if not prev_tokens:
             prev_tokens = []
@@ -515,15 +519,10 @@ class InterpolatedNGram(NGram):
         # [lambda_1, lambda_2, ... ,lambda_n]
         lambdas = self.getLambdas(prev_tokens)
 
-        # Revertimos los modelos porque empezamos de los modelos mas altos a
-        # a los mas bajos, es decir:
-        #       reversed_models = [n-grama, (n-1)-grama, ..., 1-grama]
-        reversed_models = [models[i] for i in reversed(range(0, len(models)))]
-
         probability = 0
         for i in range(len(tokens)):
             # q_ML(xn | xi ... xn-1)
-            q_ML = reversed_models[i].cond_prob(token, prev_tokens[i:])
+            q_ML = self.reversed_models[i].cond_prob(token, prev_tokens[i:])
             probability += lambdas[i] * q_ML
 
         return probability
@@ -549,20 +548,28 @@ class BackOffNGram(NGram):
         # Ponemos esta linea aca porque en caso de que no den el gamma,
         # separamos el held_out, y calculamos los modelos sin el held_out
         # porque si se los dejamos falla el ultimo test
+        print("Computando Held-Out")
         if beta is None:
             sents, held_out = self.getHeldOut(sents)
+        print("Termine de computar el Held-Out")
 
         # Listas de modelos, para la obtencion del conjunto A
+        print("Computando Modelos")
         self.models = self.getModels(n, sents, addone)
+        print("Termine de computar los Modelos")
 
         # Diccionario de conjuntos
+        print("Computando conjunto A")
         self.set_A = self.generateSetA(n, self.models)
+        print("Termine de computar el conjunto A")
 
         # Ponemos esta linea aca porque para obtener el gamma necesitamos
         # calcular la log-probability, que usa nuestro cond_prob, que esto a la
         # vez usa nuestros modelos, entonces necesitamos los modelos
+        print("Compuntando el mejor Beta\n")
         if beta is None:
             self.beta = self.getBeta(held_out)
+        print("Termine de computar el mejor Beta")
 
         # for i in self.set_A.items():
         #     print(i)
@@ -578,9 +585,13 @@ class BackOffNGram(NGram):
         """
         models = []
         if is_addone:
+            print("------> Estoy usando Add-One")
             models.append(AddOneNGram(1, sents))
+            print("------> Modelo =", models[0])
         else:
+            print("------> Estoy usando N-Gram comun")
             models.append(NGram(1, sents))
+            print("------> Modelo =", models[0])
 
         for i in range(2, n+1):
             # [2, 3, ..., n]
@@ -612,36 +623,29 @@ class BackOffNGram(NGram):
 
         held_out -- datos para calcular beta.
         """
-        self.beta = 1  # Valor inicial de gamma
-        # log-probability calculada con el gamma actual
-        my_log_prob = self.log_probability(held_out)
+        self.beta = 0.0
+        max_log_prob = self.log_probability(held_out)  # Candidato a maximo
 
-        # log-probability a maximizar
-        # Notar que la menor log-probability que puede haber
-        # es -inf por el logaritmo
-        log_prob_to_max = float("-inf")
+        # Rango de betas a probar de 0,1 en 0,1 hasta 1
+        betas = [i for i in np.arange(0.1, 1.1, 0.1)]
 
-        new_beta = self.beta
-
-        while True:
-            # Si maximize la log_probability
-            if log_prob_to_max >= my_log_prob:
-                break
-
-            log_prob_to_max = my_log_prob
-
-            # El beta correspondiente a log_prob_to_max
-            new_beta = self.beta
-
-            # Calculamos la nueva log-probability
-            # Vamos probando de 0.25 en 0.25
-            self.beta += 0.25
+        print("Beta =", self.beta, "==> Log-Prob =", max_log_prob)
+        best_beta = self.beta
+        for beta in betas:
+            self.beta = beta
             my_log_prob = self.log_probability(held_out)
+            print("Beta =", self.beta, "==> Log-Prob =", my_log_prob)
+            # Si my_log_prob es mas grande que mi candidato, lo seteo como maximo
+            if max_log_prob < my_log_prob:
+                max_log_prob = my_log_prob
+                best_beta = self.beta
 
         # beta tiene que estar en el rango [0, 1]
-        assert 0 <= new_beta and new_beta <= 1
+        assert 0 <= best_beta and best_beta <= 1
 
-        return new_beta
+        print("\nMejor Beta =", best_beta, "\n")
+
+        return best_beta
 
     def generateSetA(self, n, models):
         """
@@ -763,7 +767,8 @@ class BackOffNGram(NGram):
 
         # Caso i = 1
         if not prev_tokens:
-            probability = self.count(tuple([token])) / float(self.count(()))
+            probability = (self.count(tuple([token])) + 1) / ( float(self.count(())) + self.models[0].V())
+
         # Casos i > 1, es decir, i >= 2
         else:
             # Si xi ∈ A(x1 ... xi-1)
@@ -788,10 +793,12 @@ class BackOffNGram(NGram):
         return probability
 
 # PARA BACKOFF
-# oracion01 = 'el gato come pescado .'.split()
-# oracion02 = 'la gata come salmón .'.split()
-# sents = [oracion01, oracion02]
+# sents = ['el gato come pescado .'.split(), 'la gata come salmón .'.split(),]
 # backoff = BackOffNGram(2, sents)
-# b = backoff.getBeta(oracion02)
+# print(backoff.getBeta(['la gata come salmón .'.split()]))
 # backoff.alpha(('gato',))
 # backoff.denom(("<s>",))
+
+# inter = InterpolatedNGram(3, sents) # Teoricamente anda probar otro rango de lambdas
+
+# print("Max LP =", max_log_prob, "||", "My LP =", my_log_prob, "|| Beta =", self.beta, "||", "Best Beta =", best_beta)
