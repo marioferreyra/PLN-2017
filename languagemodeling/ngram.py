@@ -293,7 +293,8 @@ class AddOneNGram(NGram):
     # super(), es una función build-in que sirve para acceder a atributos que
     # pertenecen a una clase superior.
     def __init__(self, n, sents):
-        super().__init__(n, sents)  # Para poder usar las variables del init
+        # Para poder usar los parametros del init de la clase NGram
+        super().__init__(n, sents)
 
         # Le sumamos 1 porque se incluye el marcador </s>.
         self.count_words_type = countWordsType(sents) + 1
@@ -335,7 +336,6 @@ class AddOneNGram(NGram):
 
         # En el caso de que count(prev_tokens) = 0
         # Tomamos la probabilidad como 0 (por la division por 0)
-
         if count_prev_tokens != 0:
             probability = count_tokens / count_prev_tokens
 
@@ -352,6 +352,7 @@ class InterpolatedNGram(NGram):
             held-out data).
         addone -- whether to use addone smoothing (default: True).
         """
+        # Para poder usar los parametros del init de la clase NGram
         super().__init__(n, sents)
 
         self.gamma = gamma
@@ -417,7 +418,7 @@ class InterpolatedNGram(NGram):
         held_out -- datos para calcular gamma.
         """
         self.gamma = 1  # Valor inicial de gamma
-        # log-probability calculada con el gamma actusl
+        # log-probability calculada con el gamma actual
         my_log_prob = self.log_probability(held_out)
 
         # log-probability a maximizar
@@ -450,9 +451,9 @@ class InterpolatedNGram(NGram):
         """
         # Tengo que analizar a que n-grama pertenece el tokens,
         # para ellos usamos su largo
-        # Ejemplo: ["el", "gato", "come"] len = 3 --> 3-grama
-        # ["el", "gato"] len = 2 --> 2-grama
-        # ["el"] len = 1 --> 1-grama
+        # Ejemplo: ["el", "gato", "come"] es talque len = 3 --> 3-grama
+        #          ["el", "gato"] len = 2 --> 2-grama
+        #          ["el"] len = 1 --> 1-grama
         length_token = len(tokens)
 
         # Si es "vacio" pertenece a un 1-grama
@@ -478,12 +479,15 @@ class InterpolatedNGram(NGram):
             sumatoria = sum(lambdas[j] for j in range(0, i))
             # c = float(models[i].count(tuple(tokens[i:])))
             c = float(self.count(tuple(tokens[i:])))
-            lambdas.append((1 - sumatoria) * (c/(c + gamma)))
+            lambda_i = (1 - sumatoria) * (c/(c + gamma))
+
+            assert lambda_i >= 0
+
+            lambdas.append(lambda_i)
 
         lambdas.append(1 - sum(lambdas))
 
         assert sum(lambdas) == 1
-        # Tambien puedo hacer un assert para ver que lambda_i >= 0
 
         return lambdas
 
@@ -494,6 +498,8 @@ class InterpolatedNGram(NGram):
         token -- the token.
         prev_tokens -- the previous n-1 tokens (optional only if n = 1).
         """
+        # token = xn
+        # prev_tokens = x1 ... xn-1
         n = self.n
         models = self.models
 
@@ -504,22 +510,20 @@ class InterpolatedNGram(NGram):
 
         tokens = prev_tokens + [token]  # (prev_tokens, token)
 
-        probability = 0
-
         # Calculamos los lambdas:
         # [lambda_1, lambda_2, ... ,lambda_n]
         lambdas = self.getLambdas(prev_tokens)
 
         # Revertimos los modelos porque empezamos de los modelos mas altos a
         # a los mas bajos, es decir:
-        #       my_models = [n-grama, (n-1)-grama, ..., 1-grama]
-        my_models = []
-        for i in reversed(range(0, len(models))):
-            my_models.append(models[i])
+        #       reversed_models = [n-grama, (n-1)-grama, ..., 1-grama]
+        reversed_models = [models[i] for i in reversed(range(0, len(models)))]
 
+        probability = 0
         for i in range(len(tokens)):
-            p_ml = my_models[i].cond_prob(token, prev_tokens[i:])
-            probability += lambdas[i] * p_ml
+            # q_ML(xn | xi ... xn-1)
+            q_ML = reversed_models[i].cond_prob(token, prev_tokens[i:])
+            probability += lambdas[i] * q_ML
 
         return probability
 
@@ -536,6 +540,7 @@ class BackOffNGram(NGram):
             held-out data).
         addone -- whether to use addone smoothing (default: True).
         """
+        # Para poder usar los parametros del init de la clase NGram
         super().__init__(n, sents)
 
         self.beta = beta
@@ -602,12 +607,35 @@ class BackOffNGram(NGram):
         return new_sents, held_out
 
     def getBeta(self, held_out):
+        """
+        Calculamos un beta a partir de un held_out de datos.
+
+        held_out -- datos para calcular beta.
+        """
         pass
 
     def generateSetA(self, n, models):
+        """
+        Generamos los siguente conjuntos:
+            set_A(x1 ... xi) = {x : count(x1 ... xi x) > 0}
+
+        en total son n conjuntos
+
+        Ejemplos:
+            set_A(x1) = {x : count(x1 x) > 0}
+            set_A(x1 x2) = {x : count(x1 x2 x) > 0}
+            set_A(x1 x2 x3) = {x : count(x1 x2 x3 x) > 0}
+            set_A(x1 x2 x3 x4) = {x : count(x1 x2 x3 x4 x) > 0}
+
+        n -- order of the model
+        models -- modelos usados para la generacion de los conjuntos
+        """
+        # Diccionario de conjuntos
         # set_A = dict()
         set_A = defaultdict(set)
-        for i in range(1, n):  # [1 ... n-1] => [2-grama, 3-grama,..., n-grama]
+
+        for i in range(1, n):
+            # [1 ... n-1] => [2-grama, 3-grama,..., n-grama]
             for tokens, value in models[i].counts.items():
                 # (x1 ... xi x) ∈ (i+1)-grama y count(x1 ... xi x)>0
                 if len(tokens) == i+1 and value > 0:
@@ -629,14 +657,14 @@ class BackOffNGram(NGram):
         """
         # Tengo que analizar a que n-grama pertenece el tokens,
         # para ellos usamos su largo
-        # Ejemplo: ["el", "gato", "come"] len = 3 --> 3-grama
-        # ["el", "gato"] len = 2 --> 2-grama
-        # ["el"] len = 1 --> 1-grama
+        # Ejemplos: ("el", "gato", "come") es tq len = 3 --> 3-grama
+        #           ("el", "gato") es tq len = 2 --> 2-grama
+        #           ("el") es tq len = 1 --> 1-grama
         length_token = len(tokens)
 
-        # Si es "vacio" pertenece a un 1-grama
+        # Si es () pertenece a un 1-grama
         if tokens == ():
-            length_token = 1
+            length_token += 1
 
         # Si me como la tupla del tipo (<s>, <s>, ...), por como tenemos
         # definido la inclusion de los marcadores (n-1 <s> al inicio donde el
@@ -645,18 +673,14 @@ class BackOffNGram(NGram):
         #       (<s>,) corresponde a 2-grama
         #       (<s>, <s>) corresponde a 3-grama
         #       (<s>, <s>, <s>) corresponde a 4-grama
-        # y asi sucesivamente
-        # tokens.count("<s>") == length_token : quiere decir que la tupla
-        # contiene solamente palabras del tipo <s>
-        if tokens.count("<s>") == length_token:
-            length_token = tokens.count("<s>") + 1
-            # print(length_token)
+        # y asi sucesivamente.
 
+        # tokens.count("<s>") == length_token : quiere decir que la tupla
+        #  contiene solamente palabras del tipo <s>
+        if tokens.count("<s>") == length_token:
+            length_token += 1
 
         model = self.models[length_token-1]
-        # print(length_token, "=>", length_token-1 ,"||" , tokens, model.count(tokens))
-        # print("=========================")
-        # print(model.counts)
 
         return model.count(tokens)
 
@@ -676,11 +700,10 @@ class BackOffNGram(NGram):
         """
         alpha = 1
         cardinal_A = len(self.A(tokens))
-        # A(x1 ... xi) != Vacio
+        # Si A(x1 ... xi) != Vacio
         if cardinal_A != 0:
             beta = self.beta
             c = self.count(tuple(tokens))
-            # print("Tokens =", tokens, "=>", "|A| = 0.5 *", cardinal_A, "/", c)
             alpha = (beta * cardinal_A) / float(c)
 
         return alpha
@@ -691,13 +714,7 @@ class BackOffNGram(NGram):
 
         tokens -- the k-gram tuple.
         """
-        sumatoria = 0
-        for x in self.A(tokens):
-            # print(tokens)
-            # Problema de division por 0
-            sumatoria += self.cond_prob(x, tokens[1:])
-
-        denom = 1 - sumatoria
+        denom = 1 - sum(self.cond_prob(x, tokens[1:]) for x in self.A(tokens))
 
         return denom
 
@@ -709,35 +726,33 @@ class BackOffNGram(NGram):
         prev_tokens -- the previous n-1 tokens (optional only if n = 1).
         """
         # token = xi
-        # token = x1 ... xi-1
-        # print("token =", token, "|| count =", self.count([token]))
-        # print("prev_tokens =", prev_tokens, "|| count =", self.count(prev_tokens))
-        # print("==========================")
+        # prev_tokens = x1 ... xi-1
         probability = 0
 
-        # print("==>", token, prev_tokens)
-
         # Analizamos los casos expuestos en las notas
+        # ===========================================
+
         # Caso i = 1
         if not prev_tokens:
             probability = self.count(tuple([token])) / float(self.count(()))
         # Casos i > 1, es decir, i >= 2
         else:
-            # xi pertenece a A(x1 ... xi-1)
+            # Si xi ∈ A(x1 ... xi-1)
             if token in self.A(prev_tokens):
                 my_token = prev_tokens + [token]
                 c_estrella = self.count(tuple(my_token)) - self.beta
                 c = self.count(tuple(prev_tokens))
                 probability = c_estrella / float(c)
-            # xi pertenece a B(x1 ... xi-1)
+            # Si xi ∈ B(x1 ... xi-1)
             # Como no pertenece a las palabras talque count(palabra) > 0
             # Entonces pertenece a las palabras talque count(palabra) = 0
             else:
-                new_prev_tokens = prev_tokens[1:]
+                new_prev_tokens = prev_tokens[1:]  # x2 ... xi-1
                 alpha = self.alpha(prev_tokens)
                 q_D = self.cond_prob(token, new_prev_tokens)
 
-                if q_D != 0: # Caso division por 0
+                # Caso en que el denominador q_D es 0
+                if q_D != 0:
                     denom = self.denom(prev_tokens)
                     probability = alpha * (q_D / float(denom))
 
