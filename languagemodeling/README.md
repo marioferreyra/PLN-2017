@@ -193,12 +193,21 @@ En el archivo *ngram.py* tuvimos que definir la clase AddOneNGram, esta clase ti
     - n: el n correspondiente a n-grama
     - sents: lista de oraciones
 
-Al principio de esta clase se calcula el tamaño del alfabeto (cantidad de words type) incluyendo el marcador def fin \</s>.
+Al principio de esta clase usamos el método *countWordTypes* para calcular el tamaño del alfabeto.
 
 Se implementaron los siguientes métodos:
 
+    * countWordTypes
     * V
     * cond_prob
+
+#### Método countWordTypes
+    + Input:
+        - sents: Lista de oraciones
+    + Output:
+        - Calcula el tamaño del alfabeto
+
+Se encarga de calcular el tamaño del alfabeto (cantidad de words type) incluyendo el marcador de fin \</s>.
 
 #### Método V
     + Output:
@@ -326,7 +335,7 @@ Se implementaron los siguientes métodos:
     + Output:
         - Lista de modelos
 
-Genera una lista de *n* modelos donde el primero puede ser suavizado con Add-One si es que el parametro *is_addone* es True, sino se usan los N-gramas clasicos, el resto de modelos son N-Gramas clasicos.
+Genera una lista de *n* modelos donde el primero puede ser suavizado con Add-One si es que el parámetro *is_addone* es True caso contrario se usan los N-gramas clásicos, el resto de modelos son N-Gramas clásicos.
 
 #### Método getHeldOut
     + Input:
@@ -373,7 +382,7 @@ Este método count a diferencias de los otros *count* tiene la particularidad de
     + Output:
         - Calculo de lambdas.
 
-Para el calculo de los lambdas implementamos las formulas que están en las notas: [Modelado de Lenguaje: Notas Complementarias].
+Para el calculo de los lambdas, implementamos las formulas que están en las notas: [Modelado de Lenguaje: Notas Complementarias].
 
 #### Método cond_prob
     + Input:
@@ -399,11 +408,10 @@ Calculamos la perplexity usando como modelo el Suavizado por Interpolación y co
 Haciendo una comparación con el Suavizado Add-One, concluimos que el Suavizado por Interpolación funciona mucho mejor.  
 
 
-<!-- Controlar la ortografia -->
 Ejercicio 7: Suavizado por Back-Off con Discounting
 ---------------------------------------------------
 
-En este ejercicio se trabajo sobre el archivo *ngram.py* y ademas de agregarle al script *train.py* una opción de linea de comandos que le permita utilizar Back-Off con Discounting en lugar de los n-gramas clásicos, Add-One y Interpolacion.  
+En este ejercicio se trabajo sobre el archivo *ngram.py* y ademas de agregarle al script *train.py* una opción de linea de comandos que le permita utilizar Back-Off con Discounting en lugar de los n-gramas clásicos, Add-One y Interpolación.  
 En el archivo *ngram.py* tuvimos que definir la clase BackOffNGram, esta clase tiene como input lo siguiente:
 
     - n: el n correspondiente a n-grama
@@ -413,8 +421,8 @@ En el archivo *ngram.py* tuvimos que definir la clase BackOffNGram, esta clase t
 
 Lo que hacemos al principio en esta clase es analizar si el *beta* es parámetro, en el caso de que no sea parámetro, vamos a necesitar *Datos Held Out* para su posterior calculo.  
 Los *Datos Held Out* son un porcentaje de las *sents* (en este caso un 10%), es decir, a las *sents* les sacamos un 10%, para los *Datos Held Out*.  
-Luego lo que hacemos es generar: 1-grama, 2-grama, ..., n-grama con el metodo *getModels*. Esto cobrara mas sentido cuando expliquemos el método *generateSetA*.  
-Ademas se crean dos diccionarios *dict_denom* y *dict_alpha*, esto es para que el calculo de la probabilidad condicional en el metodo *cond_prob* sea mucho mas rapido y no tener que recalcular siempre lo mismo.
+Luego lo que hacemos es generar: 1-grama, 2-grama, ..., n-grama con el método *getModels*.  
+Ademas se crean dos diccionarios *dict_denom* y *dict_alpha*, esto es para que el calculo de la probabilidad condicional en el método *cond_prob* sea mucho mas rápido y no tener que re-calcular siempre lo mismo en cada llamada al método.
 
 Se implementaron los siguientes métodos:
 
@@ -438,7 +446,7 @@ Se implementaron los siguientes métodos:
     + Output:
         - Lista de modelos
 
-Genera una lista de *n* modelos donde el primero puede ser suavizado con Add-One si es que el parametro *is_addone* es True, sino se usan los N-gramas clasicos, el resto de modelos son N-Gramas clasicos.
+Genera una lista de *n* modelos donde el primero puede ser suavizado con Add-One si es que el parámetro *is_addone* es True caso contrario se usan los N-gramas clásicos, el resto de modelos son N-Gramas clásicos.
 
 #### Método getHeldOut
     + Input:
@@ -462,19 +470,21 @@ En las siguientes notas [Notas de Michael Collins] nos explica lo siguiente:
 
 Básicamente el "barrido" es ir probando valores de *beta* en un rango de 0 a 1, es decir, 0 <= *beta* <= 1:  
 A. Ponerle a *beta* un valor inicial  
-B. Calcular los diccionario *dict_alpha* y *dict_denom*.
+B. Calcular los diccionario *dict_alpha* y *dict_denom*.  
 C. Calcular *log_probability* con los *Datos Held Out*.  
-D. Aumentar *beta* y calcular nuevamente los diccionario *dict_alpha* y *dict_denom* y calcular *log_probability*.
+D. Aumentar *beta*, calcular nuevamente los diccionario *dict_alpha* y *dict_denom* y calcular *log_probability*.  
 E. Así sucesivamente.  
 F. Quedarse con el *beta* que mejora la *log_probability*.  
 
 #### generateSetA
     + Input:
-        - held_out: Datos Held Out
+        - n: Orden del modelos
+        - models: Lista de modelos de n-gramas
     + Output:
         - Calculo de un *beta*
 
-Se encarga de generar el conjunto A(x1 ... xi) = {x : count(x1 ... xi x) > 0}, expuestas en las [Notas de Michael Collins] y en las [Modelado de Lenguaje: Notas Complementarias].
+Se encarga de generar el conjunto A(x1 ... xi) = {x : count(x1 ... xi x) > 0} expuesto en las [Notas de Michael Collins].  
+Para ellos se hace uso de los modelos generados por el método *getModels*.
 
 #### Método count
     + Input:
@@ -483,26 +493,39 @@ Se encarga de generar el conjunto A(x1 ... xi) = {x : count(x1 ... xi x) > 0}, e
         - Cantidad de veces que aparece tokens en alguno de los n-gramas
 
 Este método count a diferencias de los otros *count* tiene la particularidad de que el *tokens* puede pertenecer a cualquiera de los n-gramas, por lo que para solucionar este problema analizamos el largo de *tokens* para poder determinar a que n-grama pertenece.  
-Tuvimos la dificulatad en los casos en las tuplas era de la forma (\<s>, \<s>, \<s>, ...) ya que siempre se mandaban a un n-grama incorrecto, para solucionar dicho problema, se analizo si el tamaño de la tupla ingresada es igual a la cantidad de elementos \<s> de la tupla, es decir, que la tupla contenga solamente \<s>, luego se los pudo madar a los n-gramas correspondientes y asi calcular el *count* correcto de la tupla.
+Tuvimos la dificultad en los casos de las tuplas que era de la forma (\<s>, \<s>, \<s>, ...) ya que siempre se mandaban a un n-grama incorrecto, para solucionar dicho problema, se analizo si el tamaño de la tupla ingresada es igual a la cantidad de elementos \<s> de la tupla, es decir, que la tupla contenga solamente \<s>, luego se las pudo mandar a los n-gramas correspondientes y así calcular el *count* correcto de la tupla.
 
 #### A
+    + Input:
+        - tokens: Lista de palabras
+    + Output:
+        - Conjunto de palabras
 
+Solamente retorna el siguiente conjunto de palabras {x : count(tokens x) > 0}
 
 #### generateDictAlpha
-    + Output:
-        - Probabilidad condicional.
 
+Carga el diccionario *dict_alpha* con las palabras pertenecientes al conjunto A y un valor numérico que se corresponde con el Calculo de Alfa de las notas [Modelado de Lenguaje: Notas Complementarias].
 
 #### generateDictDenom
-    + Output:
-        - Probabilidad condicional.
 
+Carga el diccionario *dict_denom* con las palabras pertenecientes al conjunto A y un valor numérico que se corresponde con el Calculo del Denominador Normalizador de las notas [Modelado de Lenguaje: Notas Complementarias].
 
 #### alpha
+    + Input:
+        - tokens: Lista de palabras
+    + Output:
+        - Calculo de Alfa
 
+Solamente retorna el valor almacenado en el diccionario *dict_alpha* correspondiente al *tokens* ingresado.
 
 #### denom
+    + Input:
+        - tokens: Lista de palabras
+    + Output:
+        - Calculo del Denominador Normalizador
 
+Solamente retorna el valor almacenado en el diccionario *dict_denom* correspondiente al *tokens* ingresado.
 
 #### Método cond_prob
     + Input:
@@ -511,8 +534,8 @@ Tuvimos la dificulatad en los casos en las tuplas era de la forma (\<s>, \<s>, \
     + Output:
         - Probabilidad condicional.
 
-Para poder realizar el calculo de de la probabilidad condicional, se implemento las formulas de las siguientes notas [Modelado de Lenguaje: Notas Complementarias].  
-Los n-gramas que se generaron al principio son para el calculo de la probabilidades condicionales de los distintos n-gramas (*qML* en las notas).
+Para el calculo de de la probabilidad condicional, se implemento las formulas de las notas [Modelado de Lenguaje: Notas Complementarias].  
+Tuvimos la dificultad en el caso i=1, ya que la formula expresada en las notas en nuestro caso podría ser para un n-grama clásico o uno suavizado con Add-One (por el parámetro *addone* explicado en el método *getModels*), el problema se soluciono fácilmente con un condicional, en donde en el caso de que el n-grama fuera suavizado con Add-One se usaba su calculo correspondiente, sino se usaba el calculo para los n-gramas clásicos.
 
 
 ### Perplejidad de los modelos entrenados con el Suavizado por Back-Off con Discounting
@@ -524,11 +547,18 @@ Los n-gramas que se generaron al principio son para el calculo de la probabilida
 |   3    |    361     |
 |   4    |    365     |
 
-Calculamos la perplexity usando como modelo el Suavizado por Interpolación y como se ven en los datos expuestos en la tabla de arriba, vemos que mientras el n se hace más grande, la perplexity disminuye y eso es bueno.  
-Haciendo una comparación con el Suavizado Add-One, concluimos que el Suavizado por Interpolación funciona mucho mejor.  
+Calculamos la perplexity usando como modelo el Suavizado por Back-Off con Discounting y como se ven en los datos expuestos en la tabla de arriba, vemos que mientras el n aumenta la perplexity disminuye (excepto en el caso de n=4) y eso es bueno.  
+Haciendo una comparación con el Suavizado Add-One y el Suavizado por Interpolación, concluimos que el Suavizado por Back-Off funciona mucho mejor en comparación con Add-One y levemente mejor que con Interpolación.  
 
+Para ver esto un poco mas claro comparemos la perplexity con todos los suavizados vistos:
 
+### Comparación final de la Perplexity con todos los Suavizados
 
+|       Suavizado          | n=1  | n=2  |  n=3  |  n=4  |
+|:------------------------:|:----:|:----:|:-----:|:-----:|
+|        Add-one           | 1317 | 4175 | 26179 | 42331 |
+|     Interpolación        | 1364 | 508  |  476  |  472  |
+| Back-Off con Discounting | 1364 | 384  |  361  |  365  |
 
 
 ### Test para Log-Probability, Cross-Entropy, Perplexity
@@ -546,7 +576,6 @@ Una vez obtenido la *log_probability* se las dividió por la cantidad de palabra
 
 #### Test Perplexity
 Ya obtenido la *cross_entropy* en los test anteriores se realizo el calculo de la perplexity mostrado anteriormente, así obteniendo los valores de la *perplexity*.
-
 
 
 [Método de la transformada inversa]: https://es.wikipedia.org/wiki/M%C3%A9todo_de_la_transformada_inversa
