@@ -187,7 +187,7 @@ Se puede apreciar que a medida que el n se hace más grande, las oraciones van c
 Ejercicio 4: Suavizado "Add-One"
 --------------------------------
 
-En este ejercicio se trabajo sobre el archivo *ngram.py* y ademas se agrego al script *train.py* una opción de linea de comandos que le permita utilizar Add-One en lugar de los n-gramas clásicos.  
+En este ejercicio se trabajo sobre el archivo *ngram.py* y ademas se le agrego al script *train.py* una opción de linea de comandos que le permita utilizar Add-One en lugar de los n-gramas clásicos.  
 En el archivo *ngram.py* tuvimos que definir la clase AddOneNGram, esta clase tiene como input lo siguiente:
 
     - n: el n correspondiente a n-grama
@@ -297,7 +297,7 @@ Por lo que podemos decir que el suavizado Add-One no es bueno, porque mientras m
 Ejercicio 6: Suavizado por Interpolación
 ----------------------------------------
 
-En este ejercicio se trabajo sobre el archivo *ngram.py* y ademas se agrego al script *train.py* una opción de linea de comandos que le permita utilizar Interpolación en lugar de los n-gramas clásicos y Add-One.  
+En este ejercicio se trabajo sobre el archivo *ngram.py* y ademas de agregarle al script *train.py* una opción de linea de comandos que le permita utilizar Interpolación en lugar de los n-gramas clásicos y Add-One.  
 En el archivo *ngram.py* tuvimos que definir la clase InterpolatedNGram, esta clase tiene como input lo siguiente:
 
     - n: el n correspondiente a n-grama
@@ -307,15 +307,26 @@ En el archivo *ngram.py* tuvimos que definir la clase InterpolatedNGram, esta cl
 
 Lo que hacemos al principio en esta clase es analizar si el *gamma* es parámetro, en el caso de que no sea parámetro, vamos a necesitar *Datos Held Out* para su posterior calculo.  
 Los *Datos Held Out* son un porcentaje de las *sents* (en este caso un 10%), es decir, a las *sents* les sacamos un 10%, para los *Datos Held Out*.  
-Luego lo que hacemos es generar: 1-grama, 2-grama, ..., n-grama. Esto cobrara mas sentido cuando expliquemos el método *cond_prob*
+Luego lo que hacemos es generar: 1-grama, 2-grama, ..., n-grama con el método *getModels*. Esto cobrara mas sentido cuando expliquemos el método *cond_prob*
 
 Se implementaron los siguientes métodos:
 
+    * getModels
     * getHeldOut
     * getGamma
     * count
     * getLambdas
     * cond_prob
+
+#### Método getModels
+    + Input:
+        - n: orden del modelo
+        - sents: Listas de oraciones
+        - is_addone: Booleano para saber si el primer n-grama es suavizado con Add-One
+    + Output:
+        - Lista de modelos
+
+Genera una lista de *n* modelos donde el primero puede ser suavizado con Add-One si es que el parametro *is_addone* es True, sino se usan los N-gramas clasicos, el resto de modelos son N-Gramas clasicos.
 
 #### Método getHeldOut
     + Input:
@@ -386,6 +397,138 @@ Los n-gramas que se generaron al principio son para el calculo de la probabilida
 
 Calculamos la perplexity usando como modelo el Suavizado por Interpolación y como se ven en los datos expuestos en la tabla de arriba, vemos que mientras el n se hace más grande, la perplexity disminuye y eso es bueno.  
 Haciendo una comparación con el Suavizado Add-One, concluimos que el Suavizado por Interpolación funciona mucho mejor.  
+
+
+<!-- Controlar la ortografia -->
+Ejercicio 7: Suavizado por Back-Off con Discounting
+---------------------------------------------------
+
+En este ejercicio se trabajo sobre el archivo *ngram.py* y ademas de agregarle al script *train.py* una opción de linea de comandos que le permita utilizar Back-Off con Discounting en lugar de los n-gramas clásicos, Add-One y Interpolacion.  
+En el archivo *ngram.py* tuvimos que definir la clase BackOffNGram, esta clase tiene como input lo siguiente:
+
+    - n: el n correspondiente a n-grama
+    - sents: lista de oraciones
+    - beta: parámetro que afecta el calculo de la probabilidad condicional
+    - addone: parámetro para saber si el primer 1-grama es suavizado con Add-One
+
+Lo que hacemos al principio en esta clase es analizar si el *beta* es parámetro, en el caso de que no sea parámetro, vamos a necesitar *Datos Held Out* para su posterior calculo.  
+Los *Datos Held Out* son un porcentaje de las *sents* (en este caso un 10%), es decir, a las *sents* les sacamos un 10%, para los *Datos Held Out*.  
+Luego lo que hacemos es generar: 1-grama, 2-grama, ..., n-grama con el metodo *getModels*. Esto cobrara mas sentido cuando expliquemos el método *generateSetA*.  
+Ademas se crean dos diccionarios *dict_denom* y *dict_alpha*, esto es para que el calculo de la probabilidad condicional en el metodo *cond_prob* sea mucho mas rapido y no tener que recalcular siempre lo mismo.
+
+Se implementaron los siguientes métodos:
+
+    * getModels
+    * getHeldOut
+    * getBeta
+    * generateSetA
+    * count
+    * A
+    * generateDictAlpha
+    * generateDictDenom
+    * alpha
+    * denom
+    * cond_prob
+
+#### Método getModels
+    + Input:
+        - n: orden del modelo
+        - sents: Listas de oraciones
+        - is_addone: Booleano para saber si el primer n-grama es suavizado con Add-One
+    + Output:
+        - Lista de modelos
+
+Genera una lista de *n* modelos donde el primero puede ser suavizado con Add-One si es que el parametro *is_addone* es True, sino se usan los N-gramas clasicos, el resto de modelos son N-Gramas clasicos.
+
+#### Método getHeldOut
+    + Input:
+        - sents: Listas de oraciones
+        - percentage: porcentaje de oraciones a tomar
+    + Output:
+        - Datos Held Out y las nuevas sents
+
+Solamente nos genera los *Datos Held Out* a partir de las oraciones dadas y las nuevas "sents", es decir, las *sents* menos los *Datos Held Out*.
+
+#### Método getBeta
+    + Input:
+        - held_out: Datos Held Out
+    + Output:
+        - Calculo de un *beta*
+
+Para el calculo del gamma se realiza un "barrido", usando los *Datos Held Out*.  
+En las siguientes notas [Notas de Michael Collins] nos explica lo siguiente:  
+
+    El valor para Beta puede ser elegido de nuevo maximizando la log-probability de un held-out data
+
+Básicamente el "barrido" es ir probando valores de *beta* en un rango de 0 a 1, es decir, 0 <= *beta* <= 1:  
+A. Ponerle a *beta* un valor inicial  
+B. Calcular los diccionario *dict_alpha* y *dict_denom*.
+C. Calcular *log_probability* con los *Datos Held Out*.  
+D. Aumentar *beta* y calcular nuevamente los diccionario *dict_alpha* y *dict_denom* y calcular *log_probability*.
+E. Así sucesivamente.  
+F. Quedarse con el *beta* que mejora la *log_probability*.  
+
+#### generateSetA
+    + Input:
+        - held_out: Datos Held Out
+    + Output:
+        - Calculo de un *beta*
+
+Se encarga de generar el conjunto A(x1 ... xi) = {x : count(x1 ... xi x) > 0}, expuestas en las [Notas de Michael Collins] y en las [Modelado de Lenguaje: Notas Complementarias].
+
+#### Método count
+    + Input:
+        - tokens: Tupla de palabras
+    + Output:
+        - Cantidad de veces que aparece tokens en alguno de los n-gramas
+
+Este método count a diferencias de los otros *count* tiene la particularidad de que el *tokens* puede pertenecer a cualquiera de los n-gramas, por lo que para solucionar este problema analizamos el largo de *tokens* para poder determinar a que n-grama pertenece.  
+Tuvimos la dificulatad en los casos en las tuplas era de la forma (\<s>, \<s>, \<s>, ...) ya que siempre se mandaban a un n-grama incorrecto, para solucionar dicho problema, se analizo si el tamaño de la tupla ingresada es igual a la cantidad de elementos \<s> de la tupla, es decir, que la tupla contenga solamente \<s>, luego se los pudo madar a los n-gramas correspondientes y asi calcular el *count* correcto de la tupla.
+
+#### A
+
+
+#### generateDictAlpha
+    + Output:
+        - Probabilidad condicional.
+
+
+#### generateDictDenom
+    + Output:
+        - Probabilidad condicional.
+
+
+#### alpha
+
+
+#### denom
+
+
+#### Método cond_prob
+    + Input:
+        - token: Palabra
+        - prev_tokens: Lista de palabras previas a token
+    + Output:
+        - Probabilidad condicional.
+
+Para poder realizar el calculo de de la probabilidad condicional, se implemento las formulas de las siguientes notas [Modelado de Lenguaje: Notas Complementarias].  
+Los n-gramas que se generaron al principio son para el calculo de la probabilidades condicionales de los distintos n-gramas (*qML* en las notas).
+
+
+### Perplejidad de los modelos entrenados con el Suavizado por Back-Off con Discounting
+
+| n-gram | Perplexity |
+|:------:|:----------:|
+|   1    |    1364    |
+|   2    |    384     |
+|   3    |    361     |
+|   4    |    365     |
+
+Calculamos la perplexity usando como modelo el Suavizado por Interpolación y como se ven en los datos expuestos en la tabla de arriba, vemos que mientras el n se hace más grande, la perplexity disminuye y eso es bueno.  
+Haciendo una comparación con el Suavizado Add-One, concluimos que el Suavizado por Interpolación funciona mucho mejor.  
+
+
+
 
 
 ### Test para Log-Probability, Cross-Entropy, Perplexity
