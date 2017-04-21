@@ -4,11 +4,12 @@ from math import log
 from random import random
 import numpy as np  # Para generar lista de floats
 
+
 def addMarkers(sent, n):
     """
     Agrega a una oracion:
-                        * n-1 marcadores <s> al comienzo y
-                        * 1 marcadores </s> al final.
+            * n-1 marcadores <s> al comienzo y
+            * 1 marcadores </s> al final.
     """
     # Añadimos marcadores de comienzo y fin de oracion.
     sent = ["<s>"]*(n-1) + sent + ["</s>"]
@@ -85,7 +86,6 @@ class NGram(object):
 
         # En el caso de que count(prev_tokens) = 0
         # Tomamos la probabilidad como 0 (por la division por 0)
-
         if count_prev_tokens != 0:
             probability = count_tokens / count_prev_tokens
 
@@ -141,8 +141,6 @@ class NGram(object):
             token = sent[i]  # wi : primera palabra
             prev_tokens = sent[i-n+1:i]  # Markov Assumption: wi-k ... wi-1
             x = self.cond_prob(token, prev_tokens)
-            # if x == 0.0:
-            #     import pdb; pdb.set_trace()
             probability += log2Extended(x)
 
         return probability
@@ -377,9 +375,10 @@ class InterpolatedNGram(NGram):
         # Ponemos esta linea aca porque para obtener el gamma necesitamos
         # calcular la log-probability, que usa nuestro cond_prob, que esto a la
         # vez usa nuestros modelos, entonces necesitamos los modelos
-        print("Computando Gammas\n")
+        print("Computando el mejor Gamma ...\n")
         if gamma is None:
             self.gamma = self.getGamma(held_out)
+        print("Se termino de computar el mejor Gamma")
 
     def getModels(self, n, sents, is_addone):
         """
@@ -440,7 +439,8 @@ class InterpolatedNGram(NGram):
             my_log_prob = self.log_probability(held_out)
 
             print("Gamma =", self.gamma, "==> Log-Prob =", my_log_prob)
-            # Si my_log_prob es mas grande que mi candidato, lo seteo como maximo
+            # Si my_log_prob es mas grande que mi candidato
+            # entonces lo seteo como maximo
             if max_log_prob < my_log_prob:
                 max_log_prob = my_log_prob
                 best_gamma = self.gamma
@@ -544,6 +544,7 @@ class BackOffNGram(NGram):
         super().__init__(n, sents)
 
         self.beta = beta
+        self.addone = addone
 
         # Ponemos esta linea aca porque en caso de que no den el gamma,
         # separamos el held_out, y calculamos los modelos sin el held_out
@@ -554,14 +555,10 @@ class BackOffNGram(NGram):
         # print("Termine de computar el Held-Out")
 
         # Listas de modelos, para la obtencion del conjunto A
-        print("Computando Modelos")
-        self.models = self.getModels(n, sents, addone)
-        print("Termine de computar los Modelos")
+        self.models = self.getModels(n, sents, self.addone)
 
-        # Diccionario de conjuntos
-        print("Computando conjunto A")
+        # Conjunto A: diccionario de conjuntos de palabras
         self.set_A = self.generateSetA(n, self.models)
-        print("Termine de computar el conjunto A")
 
         # Diccionarios para los valores de alpha y denom
         self.dict_denom = defaultdict(float)
@@ -570,11 +567,13 @@ class BackOffNGram(NGram):
         # Ponemos esta linea aca porque para obtener el gamma necesitamos
         # calcular la log-probability, que usa nuestro cond_prob, que esto a la
         # vez usa nuestros modelos, entonces necesitamos los modelos
-        print("Compuntando el mejor Beta\n")
+        print("Compuntando el mejor Beta ...\n")
         if beta is None:
             self.beta = self.getBeta(held_out)
-        print("Termine de computar el mejor Beta")
+        print("Se termino de computar el mejor Beta")
 
+        # Calculamos otra vez el Diccionario de Alfa y Denom, con el mejor
+        # beta
         self.generateDictAlpha()
         self.generateDictDenom()
 
@@ -592,13 +591,9 @@ class BackOffNGram(NGram):
         """
         models = []
         if is_addone:
-            print("------> Estoy usando Add-One")
             models.append(AddOneNGram(1, sents))
-            print("------> Modelo =", models[0])
         else:
-            print("------> Estoy usando N-Gram comun")
             models.append(NGram(1, sents))
-            print("------> Modelo =", models[0])
 
         for i in range(2, n+1):
             # [2, 3, ..., n]
@@ -631,6 +626,9 @@ class BackOffNGram(NGram):
         held_out -- datos para calcular beta.
         """
         self.beta = 0.0
+
+        # Calculamos el Diccionario de Alfa y Denom, con el beta inicial
+        # Para el calculo de la log-probability
         self.generateDictAlpha()
         self.generateDictDenom()
         max_log_prob = self.log_probability(held_out)  # Candidato a maximo
@@ -642,11 +640,17 @@ class BackOffNGram(NGram):
         best_beta = self.beta
         for beta in betas:
             self.beta = beta
+
+            # Calculamos nuevamente el Diccionario de Alfa y Denom, con el
+            # nuevo beta
             self.generateDictAlpha()
             self.generateDictDenom()
+
             my_log_prob = self.log_probability(held_out)
             print("Beta =", self.beta, "==> Log-Prob =", my_log_prob)
-            # Si my_log_prob es mas grande que mi candidato, lo seteo como maximo
+
+            # Si my_log_prob es mas grande que mi candidato
+            # entonces lo seteo como maximo
             if max_log_prob < my_log_prob:
                 max_log_prob = my_log_prob
                 best_beta = self.beta
@@ -710,7 +714,7 @@ class BackOffNGram(NGram):
         if tokens == ():
             length_token += 1
 
-        # Si me como la tupla del tipo (<s>, <s>, ...), por como tenemos
+        # Si me dan una tupla del tipo (<s>, <s>, ...), por como tenemos
         # definido la inclusion de los marcadores (n-1 <s> al inicio donde el
         # el n es el correspondiente al de n-grama), tenemos que pasarle dicho
         # tokens al de n-grama correspondienrte, es decir:
@@ -738,13 +742,12 @@ class BackOffNGram(NGram):
 
     def generateDictAlpha(self):
         """
-        Generamos el diccionario con los valores de alfa.
+        Generamos un diccionario con los valores de alfa.
         """
-        # for tokens in self.count.key(): # DUDA
-        for tokens in self.set_A.keys(): # DUDA
+        for tokens in self.set_A.keys():
             alpha = 1
             cardinal_A = len(self.A(tokens))
-            
+
             # Si A(x1 ... xi) != Vacio
             if cardinal_A != 0:
                 beta = self.beta
@@ -755,12 +758,9 @@ class BackOffNGram(NGram):
 
     def generateDictDenom(self):
         """
-        Normalization factor for a k-gram with 0 < k < n.
-
-        tokens -- the k-gram tuple.
+        Generamos un diccionario con los valores de denom.
         """
-        # for tokens in self.count.key(): # DUDA
-        for tokens in self.set_A.keys(): # DUDA
+        for tokens in self.set_A.keys():
             s = sum(self.cond_prob(x, tokens[1:]) for x in self.A(tokens))
             denom = 1 - s
             self.dict_denom[tokens] = denom
@@ -798,15 +798,19 @@ class BackOffNGram(NGram):
 
         # Caso i = 1
         if not prev_tokens:
-            # probability = (self.count(tuple([token])) + 1) / ( float(self.count(())) + self.models[0].V())
-            probability = self.count(tuple([token])) / float(self.count(()))
+            c1 = self.count(tuple([token]))
+            c2 = float(self.count(()))
+            # Calculo de la cond_prob para el modelo AddOne
+            if self.addone:
+                probability = (c1 + 1) / (c2 + self.models[0].V())
+            # Calculo de la cond_prob para el modelo NGram clasico
+            else:
+                probability = c1 / c2
 
         # Casos i > 1, es decir, i >= 2
         else:
             # Si xi ∈ A(x1 ... xi-1)
             if token in self.A(prev_tokens):
-                # print(type(prev_tokens), type([token]))
-                # print(prev_tokens, [token])
                 my_token = list(prev_tokens) + [token]
                 c_estrella = self.count(tuple(my_token)) - self.beta
                 c = self.count(tuple(prev_tokens))
