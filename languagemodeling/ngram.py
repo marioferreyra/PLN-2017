@@ -274,19 +274,6 @@ class NGramGenerator:
         return sent
 
 
-def countWordsType(sents):
-    """
-    Calcula el tamaño del vocabulario (words type) de una lista de oraciones.
-    """
-    words_type = []
-    for sent in sents:
-        for token in sent:
-            if token not in words_type:
-                words_type.append(token)
-
-    return len(words_type)
-
-
 class AddOneNGram(NGram):
     """
     Heredamos de NGram para poder usar todos sus metodos.
@@ -298,15 +285,30 @@ class AddOneNGram(NGram):
         super().__init__(n, sents)
 
         # Le sumamos 1 porque se incluye el marcador </s>.
-        self.count_words_type = countWordsType(sents) + 1
+        self.count_word_types = self.countWordTypes(sents) + 1
 
         # print(self.counts) #--> Ejemplo de el uso de super
+
+    def countWordTypes(self, sents):
+        """
+        Calcula el tamaño del vocabulario (word types) de una
+        lista de oraciones.
+
+        sents -- lista de oraciones
+        """
+        word_types = []
+        for sent in sents:
+            for token in sent:
+                if token not in word_types:
+                    word_types.append(token)
+
+        return len(word_types)
 
     def V(self):
         """
         Size of the vocabulary.
         """
-        return self.count_words_type
+        return self.count_word_types
 
     def cond_prob(self, token, prev_tokens=None):
         """
