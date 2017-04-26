@@ -1,5 +1,0 @@
-# No le damos seguimiento a los siguientes archivos
-
-languagemodeling/__pycache__/
-languagemodeling/tests/__pycache__/
-pln_2015.egg-info/
