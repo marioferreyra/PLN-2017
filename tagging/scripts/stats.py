@@ -16,7 +16,7 @@ from collections import defaultdict, OrderedDict
 def loadAncoraCorpus():
     # Load the data
     # corpus = SimpleAncoraCorpusReader('ancora/ancora-2.0/')
-    PATH = "/home/mario/Escritorio/ancora-2.0"
+    PATH = "/home/mario/Escritorio/ancora-3.0.1es"
     corpus = SimpleAncoraCorpusReader(PATH)
     sents = list(corpus.tagged_sents())
 
