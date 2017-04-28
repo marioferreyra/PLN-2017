@@ -74,20 +74,18 @@ if __name__ == '__main__':
     print("\n")
 
     print("-----------------------------------------------------------")
-    print(" TAG | FRECUENCIA | PORCENTAJE | 5 PALABRAS MAS FRECUENTES ")
+    print(" Tag | Frecuencia | Porcentaje | 5 Palabras mas frecuentes ")
     print("-----------------------------------------------------------")
     list_word_count = []
     for tag, frec, perce in list_tag_frec_perc:
         list_word_count = sorted(dict_tag_word_count[tag].items(), key=lambda x: x[1], reverse=True)
 
         list_words_most_frec = list_word_count[:5]
-        # new_list = [word_count[0] for word_count in list_words_most_frec]
-        new_list = [word for word, _ in list_words_most_frec]
-        print("{:^8} | {:^5} | {:^5} | {}".format(tag, frec, round(perce, 3), new_list))
+        new_list = " ".join([word for word, _ in list_words_most_frec])
+        print("{:^8} | {:^5} | {:^5}% | {}".format(tag, frec, round(perce*100, 2), new_list))
 
     print("\n")
     print("--------------------------------------------------------------------------")
-    # print("{:^10} | {:^10} | {:^10} | {:^10}".format("Nivel de Ambigüedad", "#Palabras", "Porcentaje", "5 Palabras mas frecuentes"))
     print(" Nivel de Ambigüedad | #Palabras | Porcentaje | 5 Palabras mas frecuentes ")
     print("--------------------------------------------------------------------------")
     for level in range(1, 10):
@@ -99,5 +97,6 @@ if __name__ == '__main__':
         new_list_word_count = sorted(new_list_word_count, key=lambda x: x[1], reverse=True)
         new_list_word = [word for word, _ in new_list_word_count]
         length_list = len(new_list_word)
-        porcentaje = round((float(length_list)/word_occurrences)*100, 5)
-        print("{:^20} | {:^9} | {:^9}% | {}".format(level, length_list, porcentaje, new_list_word[:5]))
+        new_list_slice = " ".join(new_list_word[:5])
+        porcentaje = round((float(length_list)/len(dict_words))*100, 2)
+        print("{:^20} | {:^9} | {:^9}% | {}".format(level, length_list, porcentaje, new_list_slice))
