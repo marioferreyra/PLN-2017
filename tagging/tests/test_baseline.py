@@ -20,7 +20,7 @@ class TestBaselineTagger(TestCase):
         for w, t in zip('el gato come pescado .'.split(), 'D N V N P'.split()):
             self.assertEqual(t, baseline.tag_word(w))
 
-        for w, t in zip('el perro come salame .'.split(), 'D N V N P'.split()):
+        for w, t in zip('el perro come salame .'.split(), 'D nc0s000 V nc0s000 P'.split()):
             self.assertEqual(t, baseline.tag_word(w))
 
     def test_tag(self):

@@ -8,8 +8,6 @@ class BaselineTagger:
         """
         dict_word_tag_count = defaultdict(lambda : defaultdict(int))
 
-        nuevo = defaultdict(int)
-
         for sent in tagged_sents:
             for word, tag in sent:
                 dict_word_tag_count[word][tag] += 1
@@ -21,15 +19,6 @@ class BaselineTagger:
             list_tag_count = list(tag_count.items())
             self.dict_word_tag[word] = list_tag_count[0][0]
             self.list_tag_count += list(tag_count.items())
-
-        for item in self.list_tag_count:
-            nuevo[item[0]] += item[1]
-
-        # print(self.dict_word_tag)
-        print(self.list_tag_count)
-        print(nuevo)
-        self.best_tag = max(nuevo.keys(), key=lambda x: nuevo[x])
-        print(self.best_tag)
 
     def tag(self, sent):
         """
@@ -45,10 +34,10 @@ class BaselineTagger:
 
         w -- the word.
         """
+        tag = "nc0s000"
         if not self.unknown(w):
             tag = self.dict_word_tag[w]
-        else:
-            tag = self.best_tag
+
         return tag
 
     def unknown(self, w):
