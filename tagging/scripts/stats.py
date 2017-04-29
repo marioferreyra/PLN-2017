@@ -25,11 +25,10 @@ if __name__ == '__main__':
     dict_words = defaultdict(int)
     dict_tags = defaultdict(int)
 
-    # tag : {word : cantidad}
+    # Diccionario = tag : {word : cantidad}
     dict_tag_word_count = defaultdict(lambda: defaultdict(int))
 
-    # word : {tag : cantidad}
-    # dict_word_tag = defaultdict(set)
+    # Diccionario = word : {tag : cantidad}
     dict_word_tag_count = defaultdict(lambda: defaultdict(int))
 
     for sent in sents:
@@ -38,7 +37,6 @@ if __name__ == '__main__':
             dict_words[word] += 1
             dict_tags[tag] += 1
             dict_tag_word_count[tag][word] += 1
-            # dict_word_tag[word].add(tag)
             dict_word_tag_count[word][tag] += 1
 
     count_sents = len(sents)  # Cantidad de oraciones
@@ -49,7 +47,8 @@ if __name__ == '__main__':
     tag_occurrences = sum(dict_tags.values())  # Cantidad de ocurrencias de tag
 
     # Lista (tags, cantidad) ordenado de mayor a menor
-    list_tags_descending = sorted(dict_tags.items(), key=lambda x: x[1],
+    list_tags_descending = sorted(dict_tags.items(),
+                                  key=lambda x: x[1],
                                   reverse=True)
 
     # Tomamos los 10 tags mas frecuentes
@@ -58,8 +57,8 @@ if __name__ == '__main__':
     # Lista de tuplas (tag, frecuencia, porcentaje)
     list_tag_frec_perc = []
     for tag, frec in tags_most_frec:
-        percentage = (float(frec)/tag_occurrences)*100
-        list_tag_frec_perc.append((tag, frec, round(percentage, 2)))
+        percentage = round((float(frec)/tag_occurrences)*100, 2)
+        list_tag_frec_perc.append((tag, frec, percentage))
 
     print("Estadisticas")
     print("============")
@@ -78,8 +77,11 @@ if __name__ == '__main__':
     list_word_count = []
     for tag, frec, perce in list_tag_frec_perc:
         list_word_count = sorted(dict_tag_word_count[tag].items(),
-                                 key=lambda x: x[1], reverse=True)
-        words_most_frec = list_word_count[:5]
+                                 key=lambda x: x[1],
+                                 reverse=True)
+
+        # Obtenemos solo las 5 palabras mas frecuentes
+        words_most_frec = list_word_count[:5]  # (word, count)
         new_list = " ".join([word for word, _ in words_most_frec])
         print("{:^8} | {:^10} | {:^9}% | {}".format(tag,
                                                     frec,
@@ -100,21 +102,23 @@ if __name__ == '__main__':
         # Lista de tuplas (palabra, ocurrencias)
         list_word_count = []
         for word, tag_count in dict_word_tag_count.items():
-            # Palabras con nivel de ambiguedad 'level'
+            # Palabras con nivel de ambiguedad = 'level'
             if len(tag_count.items()) == level:
                 list_word_count.append((word, dict_words[word]))
 
         # Ordenamos mayor a menor segun la cantidad de ocurrencias
-        list_word_count = sorted(list_word_count, key=lambda x: x[1],
+        list_word_count = sorted(list_word_count,
+                                 key=lambda x: x[1],
                                  reverse=True)
-
-        # Obtenemos solo las palabras
-        list_words = [word for word, _ in list_word_count]
-        length_list_words = len(list_words)
+        length_list_words = len(list_word_count)  # Cantidad de palabras
 
         # Porcentaje de ocurrencias de palabras sobre el total
         percentage = round((float(length_list_words)/count_words)*100, 2)
-        new_list = " ".join(list_words[:5])
+
+        # Obtenemos solo las 5 palabras mas frecuentes
+        words_most_frec = list_word_count[:5]  # (word, count)
+        new_list = " ".join([word for word, _ in words_most_frec])
         print("{:^20} | {:^9} | {:^9}% | {}".format(level,
                                                     length_list_words,
-                                                    percentage, new_list))
+                                                    percentage,
+                                                    new_list))
