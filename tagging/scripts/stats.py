@@ -22,8 +22,8 @@ if __name__ == '__main__':
     sents = list(corpus.tagged_sents())
 
     # Compute the statistics
-    dict_words = defaultdict(int)
-    dict_tags = defaultdict(int)
+    dict_words = defaultdict(int) # Diccionario = word : cantidad
+    dict_tags = defaultdict(int) # Diccionario = word : cantidad
 
     # Diccionario = tag : {word : cantidad}
     dict_tag_word_count = defaultdict(lambda: defaultdict(int))

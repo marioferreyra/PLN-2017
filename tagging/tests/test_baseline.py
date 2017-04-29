@@ -30,7 +30,7 @@ class TestBaselineTagger(TestCase):
         self.assertEqual(y, 'D N V N P'.split())
 
         y = baseline.tag('el perro come salame .'.split())
-        self.assertEqual(y, 'D N V N P'.split())
+        self.assertEqual(y, 'D nc0s000 V nc0s000 P'.split())
 
     def test_unknown(self):
         baseline = BaselineTagger(self.tagged_sents)
