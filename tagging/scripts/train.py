@@ -1,4 +1,5 @@
-"""Train a sequence tagger.
+"""
+Train a sequence tagger.
 
 Usage:
   train.py [-m <model>] -o <file>
@@ -10,9 +11,8 @@ Options:
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
-from docopt import docopt
 import pickle
-
+from docopt import docopt
 from corpus.ancora import SimpleAncoraCorpusReader
 from tagging.baseline import BaselineTagger
 
@@ -25,15 +25,18 @@ models = {
 if __name__ == '__main__':
     opts = docopt(__doc__)
 
-    # load the data
+    # Load the data
     files = 'CESS-CAST-(A|AA|P)/.*\.tbf\.xml'
-    corpus = SimpleAncoraCorpusReader('ancora/ancora-2.0/', files)
+    PATH = "/home/mario/Escritorio/ancora-3.0.1es"
+    corpus = SimpleAncoraCorpusReader(PATH, files)
     sents = list(corpus.tagged_sents())
 
-    # train the model
-    model = models[opts['-m']](sents)
+    # Train the model
+    m = str(opts['-m'])
+    print("##### Baseline Tagger #####")
+    model = models[m](sents)
 
-    # save it
+    # Save it
     filename = opts['-o']
     f = open(filename, 'wb')
     pickle.dump(model, f)
