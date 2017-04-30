@@ -21,10 +21,10 @@ class BaselineTagger:
                                             key=lambda x: x[1],
                                             reverse=True)
 
-            # Lista de tags
-            list_tags = [tag for tag, _ in list_tags_count_sorted]
+            # Tag mas frecuente
+            tag_most_frec = max(list_tags_count_sorted, key=lambda x: x[1])[0]
 
-            self.dict_word_tag[word] = list_tags[0]  # Tag mas frecuente
+            self.dict_word_tag[word] = tag_most_frec
 
     def tag(self, sent):
         """
@@ -58,11 +58,10 @@ class BaselineTagger:
         # Si no ==> False
         return (w not in self.dict_word_tag)
 
-
-tagged_sents = [
-            list(zip('el gato come pescado gato gato .'.split(),
-                 'D N V N V V P'.split())),
-            list(zip('la gata come salmón .'.split(),
-                 'D N V N P'.split())),
-        ]
-b = BaselineTagger(tagged_sents)
+# tagged_sents = [
+#             list(zip('el gato come pescado gato gato .'.split(),
+#                  'D N V N V V P'.split())),
+#             list(zip('la gata come salmón .'.split(),
+#                  'D N V N P'.split())),
+#         ]
+# b = BaselineTagger(tagged_sents)
