@@ -44,9 +44,11 @@ if __name__ == '__main__':
     hits = 0
     total = 0
 
+    # Hits Palabras conocidas
     hits_known_word = 0
     total_known_word = 0
 
+    # Hits Palabras desconocidas
     hits_unknown_word = 0
     total_unknown_word = 0
 
@@ -65,7 +67,7 @@ if __name__ == '__main__':
         # Accuracy sobre las etiquetas correctas
         hits_sent = [m == g for m, g in zip(model_tag_sent, gold_tag_sent)]
         hits += sum(hits_sent)
-        total += len(sent)
+        total += len(sent)  # Notar que len(sent) == len(hits_sent)
         acc_global = float(hits) / total
 
         length_hits_sent = len(hits_sent)
@@ -73,6 +75,8 @@ if __name__ == '__main__':
         # Accuracy sobre las palabras conocidas y palabras desconidas
         hits_known = []
         hits_unknown = []
+        # Analizamos cada palabra para saber si conocida o desconodida
+        # El index es para saber el valor del tag de la palabra (correcto o no)
         for index, word in enumerate(word_sent):
             value_tag = hits_sent[index]
             if model.unknown(word):
@@ -88,22 +92,19 @@ if __name__ == '__main__':
         total_unknown_word += len(hits_unknown)
         acc_unknown_word = float(hits_unknown_word) / total_unknown_word
 
-        progress("{:3.1f}% (Global {:2.2f}%) (Know {:2.2f}%) (Unknown {:2.2f}%)".format((float(i)/n)*100,
-                                                                                        acc_global*100,
-                                                                                        acc_known_word*100,
-                                                                                        acc_unknown_word*100))
+        progress("Porcentaje {:3.1f}% ==> \
+(Global {:2.2f}%) \
+(Know {:2.2f}%) \
+(Unknown {:2.2f}%)".format((float(i)/n)*100,
+                           acc_global*100,
+                           acc_known_word*100,
+                           acc_unknown_word*100))
 
     acc_global = float(hits) / total
     acc_known_word = float(hits_known_word) / total_known_word
     acc_unknown_word = float(hits_unknown_word) / total_unknown_word
 
-    print("")
+    print("\n")
     print("Accuracy Global: {:2.2f}%".format(acc_global * 100))
-    print("Accuracy Know Words: {:2.2f}%".format(acc_known_word * 100))
-    print("Accuracy Unknow Words: {:2.2f}%".format(acc_unknown_word * 100))
-
-
-# Programar un script eval.py que permita evaluar un modelo de tagging. Calcular:
-# * Accuracy, esto es, el porcentaje de etiquetas correctas.
-# * Accuracy sobre las palabras conocidas y sobre las palabras desconocidas.
-# * Matriz de confusión, como se explica en la sección 5.7.1 (Error Analysis) de Jurafsky & Martin.
+    print("Accuracy Known Words: {:2.2f}%".format(acc_known_word * 100))
+    print("Accuracy Unknown Words: {:2.2f}%".format(acc_unknown_word * 100))

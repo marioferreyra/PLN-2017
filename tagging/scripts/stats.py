@@ -22,8 +22,8 @@ if __name__ == '__main__':
     sents = list(corpus.tagged_sents())
 
     # Compute the statistics
-    dict_words = defaultdict(int) # Diccionario = word : cantidad
-    dict_tags = defaultdict(int) # Diccionario = word : cantidad
+    dict_words = defaultdict(int)  # Diccionario = word : cantidad
+    dict_tags = defaultdict(int)  # Diccionario = word : cantidad
 
     # Diccionario = tag : {word : cantidad}
     dict_tag_word_count = defaultdict(lambda: defaultdict(int))
@@ -63,9 +63,9 @@ if __name__ == '__main__':
     print("Estadisticas")
     print("============")
     print("Cantidad de oraciones = {}".format(count_sents))
-    print("Cantidad de tokens = {}".format(count_words))
+    print("Cantidad de tags (vocabulario de tags) = {}".format(count_tags))
     print("Cantidad de palabras = {}".format(word_occurrences))
-    print("Cantidad de tags = {}".format(count_tags))
+    print("Cantidad de palabras (vocabulario) = {}".format(count_words))
     print("\n")
 
     print("--------------------------------------------------------------")
