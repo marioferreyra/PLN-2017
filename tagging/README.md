@@ -7,66 +7,105 @@ Mario E. Ferreyra
 
 Ejercicio 1: Corpus AnCora - Estadísticas de etiquetas POS
 ----------------------------------------------------------
-Se implemento un script *stats.py*, que se encarga de mostrar las siguientes estadisticas del corpus AnCora:
-
-Estadisticas
-============
-Cantidad de oraciones =               17378
-Cantidad de tags =                    85
-Cantidad de ocurrencias de palabras = 517194
-Cantidad de palabras distintas =      46501
-
------------------------------------------------------------
- Tag | Frecuencia | Porcentaje | 5 Palabras mas frecuentes 
------------------------------------------------------------
- sp000   | 79884 | 93981.18% | de en a del con
-nc0s000  | 63452 | 74649.41% | presidente equipo partido país año
- da0000  | 54549 | 64175.29% | la el los las El
- aq0000  | 33906 | 39889.41% | pasado gran mayor nuevo próximo
-   fc    | 30147 | 35467.06% | ,
-np00000  | 29111 | 34248.24% | Gobierno España PP Barcelona Madrid
-nc0p000  | 27736 | 32630.59% | años millones personas países días
-   fp    | 17512 | 20602.35% | .
-   rg    | 15336 | 18042.35% | más hoy también ayer ya
-   cc    | 15023 | 17674.12% | y pero o Pero e
+Se implemento el script *stats.py*, que se encarga de mostrar las siguientes estadísticas del corpus AnCora:
 
 
---------------------------------------------------------------------------
- Nivel de Ambigüedad | #Palabras | Porcentaje | 5 Palabras mas frecuentes 
---------------------------------------------------------------------------
-         1           |   43972   |   94.56  % | , con por su El
-         2           |   2318    |   4.98   % | el en y " los
-         3           |    180    |   0.39   % | de la . un no
-         4           |    23     |   0.05   % | que a dos este fue
-         5           |     5     |   0.01   % | mismo cinco medio ocho vista
-         6           |     3     |   0.01   % | una como uno
-         7           |     0     |    0.0   % | 
-         8           |     0     |    0.0   % | 
-         9           |     0     |    0.0   % | 
+#### Estadísticas Básicas
+
+* Cantidad de oraciones = 17378
+* Cantidad de tags (vocabulario de tags) = 85
+* Cantidad de ocurrencias de palabras = 517194
+* Cantidad de palabras (vocabulario) = 46501
+
+
+#### Etiquetas más frecuentes
+
+|   Tag   | Frecuencia | Porcentaje |        5 Palabras mas frecuentes        |
+|:-------:|:----------:|:----------:|:---------------------------------------:|
+|  sp000  |   79884    |  15.45 %   | de en a del con                         |
+| nc0s000 |   63452    |  12.27 %   | presidente equipo partido país año      |
+| da0000  |   54549    |  10.55 %   | la el los las El                        |
+| aq0000  |   33906    |   6.56 %   | pasado gran mayor nuevo próximo         |
+|   fc    |   30147    |   5.83 %   | ,                                       |
+| np00000 |   29111    |   5.63 %   | Gobierno España PP Barcelona Madrid     |
+| nc0p000 |   27736    |   5.36 %   | años millones personas países días      |
+|   fp    |   17512    |   3.39 %   | .                                       |
+|   rg    |   15336    |   2.97 %   | más hoy también ayer ya                 |
+|   cc    |   15023    |   2.9 %    | y pero o Pero e                         |
+
+
+#### Descripción de cada Etiqueta
+
+|   Tag   |         Descripción         |
+|:-------:|:---------------------------:|
+|  sp000  |         Preposición         |
+| nc0s000 | Sustantivo común (singular) |
+| da0000  |     Artículo (definido)     |
+| aq0000  |   Adjetivo (descriptivo)    |
+|   fc    |            Coma             |
+| np00000 |      Sustantivo propio      |
+| nc0p000 |  Sustantivo común (plural)  |
+|   fp    |            Punto            |
+|   rg    |     Adverbio (general)      |
+|   cc    |   Conjunción (coordinada)   |
+
+
+#### Niveles de ambigüedad de las palabras
+
+| Nivel de Ambigüedad | #Palabras | Porcentaje |  5 Palabras mas frecuentes   |
+|:-------------------:|:---------:|:----------:|:----------------------------:|
+|          1          |   43972   |  94.56 %   | , con por su El              |
+|          2          |   2318    |   4.98 %   | el en y " los                |
+|          3          |    180    |   0.39 %   | de la . un no                |
+|          4          |    23     |   0.05 %   | que a dos este fue           |
+|          5          |     5     |   0.01 %   | mismo cinco medio ocho vista |
+|          6          |     3     |   0.01 %   | una como uno                 |
+|          7          |     0     |   0.0 %    |                              |
+|          8          |     0     |   0.0 %    |                              |
+|          9          |     0     |   0.0 %    |                              |
 
 
 Ejercicio 2: Baseline Tagger
 ----------------------------
+Se implemento en el archivo *baseline.py* un "Etiquetador Baseline", el cual se encarga de etiquetar cada palabra con su etiqueta más frecuente observada en entrenamiento y a las palabras desconocidas, es decir, aquellas no vistas en el entrenamiento, las etiquetamos con **nc0s000**.
+
 
 Ejercicio 3: Entrenamiento y Evaluación de Taggers
 --------------------------------------------------
+Se implemento el script *train.py*, el cual nos permitirá entrenar un "Etiquetador Baseline".  
+
+Se implemento el script *eval.py*, el cual nos permitirá evaluar un modelo de tagging.  
+Este script calcula lo siguiente:
+
+* Accuracy sobre todas las palabras.
+* Accuracy sobre las palabras conocidas.
+* Accuracy sobre las palabras desconocidas.
+* Matriz de confusión.
+
+__**Nota:**__ *Accuracy* es el porcentaje de etiquetas correctas, es decir, la cantidad de aciertos del modelo de tagging sobre el tagging original.
+
+
+### Evaluación del "Etiquetador Baseline"
+* Accuracy sobre todas las palabras = 87.61 %
+* Accuracy sobre las palabras conocidas = 95.30 %
+* Accuracy sobre las palabras desconocidas = 18.01 %
+
+#### Matriz de confusión
+
 
 Ejercicio 4: Hidden Markov Models y Algoritmo de Viterbi
 --------------------------------------------------------
 
+
+
 Ejercicio 5: HMM POS Tagger
 ---------------------------
 
+
+Ejercicio 6: Features para Etiquetado de Secuencias
+---------------------------------------------------
+
+
+
 Ejercicio 7: Maximum Entropy Markov Models
 ------------------------------------------
-
-| n-gram | Perplexity |
-|:------:|:----------:|
-|   1    |    1364    |
-|   2    |    508     |
-|   3    |    476     |
-|   4    |    472     |
-
-
-Ejercicio 7: Suavizado por Back-Off con Discounting
----------------------------------------------------
