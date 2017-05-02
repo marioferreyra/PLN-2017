@@ -60,43 +60,43 @@ if __name__ == '__main__':
         percentage = round((float(frec)/tag_occurrences)*100, 2)
         list_tag_frec_perc.append((tag, frec, percentage))
 
-    print("Estadisticas")
-    print("============")
-    print("Cantidad de oraciones = {}".format(count_sents))
-    print("Cantidad de tags (vocabulario de tags) = {}".format(count_tags))
-    print("Cantidad de palabras = {}".format(word_occurrences))
-    print("Cantidad de palabras (vocabulario) = {}".format(count_words))
-    print("\n")
+    print("Estadisticas Basicas")
+    print("====================")
+    print("* Cantidad de oraciones = {}".format(count_sents))
+    print("* Cantidad de tags (vocabulario de tags) = {}".format(count_tags))
+    print("* Cantidad de palabras = {}".format(word_occurrences))
+    print("* Cantidad de palabras (vocabulario) = {}".format(count_words))
 
-    print("--------------------------------------------------------------")
-    print(" {:^7} | {} | {} | {} ".format("Tag",
-                                          "Frecuencia",
-                                          "Porcentaje",
-                                          "5 Palabras mas frecuentes"))
-    print("--------------------------------------------------------------")
+    print("\nEtiquetas más frecuentes")
+    print("========================\n")
+    string_column = "5 Palabras mas frecuentes"
+    print("| {:^8} | {:^10} | {:^9} | {:^37} |".format("Tag",
+                                                       "Frecuencia",
+                                                       "Porcentaje",
+                                                       string_column))
+    print("|:--------:|:----------:|:----------:|:-----------------\
+--------------------:|")
     list_word_count = []
     for tag, frec, perce in list_tag_frec_perc:
         list_word_count = sorted(dict_tag_word_count[tag].items(),
                                  key=lambda x: x[1],
                                  reverse=True)
-
         # Obtenemos solo las 5 palabras mas frecuentes
         words_most_frec = list_word_count[:5]  # (word, count)
         new_list = " ".join([word for word, _ in words_most_frec])
-        print("{:^8} | {:^10} | {:^9}% | {}".format(tag,
-                                                    frec,
-                                                    perce,
-                                                    new_list))
+        print("| {:^8} | {:^10} | {:^9}% | {:^37} |".format(tag,
+                                                            frec,
+                                                            perce,
+                                                            new_list))
 
-    print("\n")
-    print("---------------------------------------\
-----------------------------------")
-    print(" {} | {} | {} | {} ".format("Nivel de Ambigüedad",
-                                       "#Palabras",
-                                       "Porcentaje",
-                                       "5 Palabras mas frecuentes"))
-    print("---------------------------------------\
-----------------------------------")
+    print("\nNiveles de ambigüedad de las palabras")
+    print("=====================================\n")
+    print("| {:^20} | {:^9} | {:^9} | {:^28} |".format("Nivel de Ambigüedad",
+                                                       "#Palabras",
+                                                       "Porcentaje",
+                                                       string_column))
+    print("|:--------------------:|:---------:|:----------:|:------\
+----------------------:|")
     # Niveles de ambiguedad: 1 ... 9
     for level in range(1, 10):
         # Lista de tuplas (palabra, ocurrencias)
@@ -118,7 +118,7 @@ if __name__ == '__main__':
         # Obtenemos solo las 5 palabras mas frecuentes
         words_most_frec = list_word_count[:5]  # (word, count)
         new_list = " ".join([word for word, _ in words_most_frec])
-        print("{:^20} | {:^9} | {:^9}% | {}".format(level,
-                                                    length_list_words,
-                                                    percentage,
-                                                    new_list))
+        print("| {:^20} | {:^9} | {:^9}% | {:^28} |".format(level,
+                                                            length_list_words,
+                                                            percentage,
+                                                            new_list))
