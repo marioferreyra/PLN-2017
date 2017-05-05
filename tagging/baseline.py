@@ -16,13 +16,8 @@ class BaselineTagger:
         self.dict_word_tag = defaultdict(str)  # Diccionario = word : tag
 
         for word, tag_count in dict_word_tag_count.items():
-            # Lista (tags, cantidad) ordenado de mayor a menor
-            list_tags_count_sorted = sorted(tag_count.items(),
-                                            key=lambda x: x[1],
-                                            reverse=True)
-
-            # Tag mas frecuente
-            tag_most_frec = max(list_tags_count_sorted, key=lambda x: x[1])[0]
+            # Maximo de la lista (tag, cantidad)
+            tag_most_frec = max(tag_count.items(), key=lambda x: x[1])[0]
 
             self.dict_word_tag[word] = tag_most_frec
 
@@ -57,11 +52,3 @@ class BaselineTagger:
         # Si la palabra no esta en el diccionario ==> True
         # Si no ==> False
         return (w not in self.dict_word_tag)
-
-# tagged_sents = [
-#             list(zip('el gato come pescado gato gato .'.split(),
-#                  'D N V N V V P'.split())),
-#             list(zip('la gata come salmón .'.split(),
-#                  'D N V N P'.split())),
-#         ]
-# b = BaselineTagger(tagged_sents)
