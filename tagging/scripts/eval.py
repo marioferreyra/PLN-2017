@@ -13,47 +13,8 @@ import sys
 import pickle
 from docopt import docopt
 from corpus.ancora import SimpleAncoraCorpusReader
-
-# Para la matriz de confusion
-import itertools
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
-
-def plotConfusionMatrix(cm,
-                        classes,
-                        normalize=False,
-                        title='Confusion matrix',
-                        cmap=plt.cm.Blues):
-    """
-    This function prints and plots the confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
-    """
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title(title)
-    plt.colorbar()
-    tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
-    plt.yticks(tick_marks, classes)
-
-    if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        print("Normalized confusion matrix")
-    else:
-        print('Confusion matrix, without normalization')
-
-    print(cm)
-
-    thresh = cm.max() / 2.
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(j, i, cm[i, j],
-                 horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
-
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-
+from sklearn.metrics import confusion_matrix  # Para la matriz de confusion
+from collections import Counter
 
 def progress(msg, width=None):
     """
@@ -92,12 +53,19 @@ if __name__ == '__main__':
     hits_unknown_word = 0
     total_unknown_word = 0
 
+    # Para Matriz de Confusion
+    tags_gold = []  # Tags correctos
+    tags_models = []  # Tags modelados
+
     n = len(sents)
     for i, sent in enumerate(sents):
         word_sent, gold_tag_sent = zip(*sent)
 
         # Tageamos la oracion con nuestro modelo
         model_tag_sent = model.tag(word_sent)
+
+        tags_gold += list(gold_tag_sent)
+        tags_models += model_tag_sent
 
         assert len(model_tag_sent) == len(gold_tag_sent), i
 
@@ -148,3 +116,21 @@ if __name__ == '__main__':
     print("Accuracy Global: {:2.2f}%".format(acc_global * 100))
     print("Accuracy Known Words: {:2.2f}%".format(acc_known_word * 100))
     print("Accuracy Unknown Words: {:2.2f}%".format(acc_unknown_word * 100))
+
+    # Computamos Matriz de Confusion
+    print("\nMatriz de confusion")
+    print("===================")
+    counter_tags = Counter(tags_gold)
+    labels = [t for t, _ in counter_tags.most_common(10)] # 10 tags mas frec
+    my_confusion_matrix = confusion_matrix(tags_gold, tags_models, labels)
+    my_confusion_matrix = (my_confusion_matrix/total)*100
+
+    print(labels)
+    for i in range(10):
+        for j in range(10):
+            value = round(my_confusion_matrix[i][j], 2)
+            if value == 0.0:
+                print("| -".format(value), end="   ")
+            else:
+                print("| {}".format(value), end="   ")
+        print("")
