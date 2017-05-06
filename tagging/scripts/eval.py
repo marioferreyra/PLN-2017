@@ -16,6 +16,7 @@ from corpus.ancora import SimpleAncoraCorpusReader
 from sklearn.metrics import confusion_matrix  # Para la matriz de confusion
 from collections import Counter
 
+
 def progress(msg, width=None):
     """
     Ouput the progress of something on the same line.
@@ -125,12 +126,30 @@ if __name__ == '__main__':
     my_confusion_matrix = confusion_matrix(tags_gold, tags_models, labels)
     my_confusion_matrix = (my_confusion_matrix/total)*100
 
-    print(labels)
-    for i in range(10):
-        for j in range(10):
-            value = round(my_confusion_matrix[i][j], 2)
+    initial_delimiter = True
+    for label in labels:
+        if initial_delimiter:
+            print("| {:^7} |".format(""), end=" ")
+            initial_delimiter = False
+        print("{:^7}".format(label), end=" | ")
+
+    initial_delimiter = True
+    for i in range(11):
+        if initial_delimiter:
+            print("\n|", end="")
+            initial_delimiter = False
+        print("{}".format(":-------:"), end="|")
+
+    print("")
+    for row in range(10):  # Filas
+        initial_delimiter = True
+        for column in range(10): # Columnas
+            value = round(my_confusion_matrix[row][column], 2)
+            if initial_delimiter:
+                print("| {:^7} |".format(labels[row]), end = " ")
+                initial_delimiter = False
             if value == 0.0:
-                print("| -".format(value), end="   ")
+                print("{:^7}".format("-"), end=" | ")
             else:
-                print("| {}".format(value), end="   ")
+                print("{:^7}".format(value), end=" | ")
         print("")
