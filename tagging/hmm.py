@@ -26,6 +26,7 @@ def log2Extended(x):
     else:
         return log(x, 2)
 
+
 class HMM:
 
     def __init__(self, n, tagset, trans, out):
@@ -91,24 +92,17 @@ class HMM:
         x -- sentence.
         y -- tagging.
         """
-        n = self.n
-        # m = len(x)
+        assert len(x) == len(y)
 
-        # assert len(x) == len(y)
+        q_probability = self.tag_prob(y)
 
-        # probability = 1
-        # for i in range(0, m):
-        #     probability *= self.out_prob(x[i], y[i])
+        e_probability = 1
+        for word, tag in zip(x, y):
+            e_probability *= self.out_prob(word, tag)
 
-        # return probability
-        probability = 1
+        probability = q_probability * e_probability
 
-        tag_prob = self.tag_prob(y)
-
-        for i in range(0, len(x)):
-            probability *= self.out_prob(x[i], y[i])
-
-        return probability * tag_prob
+        return probability
 
     def tag_log_prob(self, y):
         """
@@ -124,10 +118,11 @@ class HMM:
         for i in range(n-1, m):
             tag = y[i]  # wi : primera palabra
             prev_tags = y[i-n+1:i]  # Markov Assumption: wi-k ... wi-1
-            value = self.trans_prob(tag, tuple(prev_tags))
-            probability += log2Extended(value)
+            probability += log2Extended(self.trans_prob(tag, tuple(prev_tags)))
 
         return probability
+
+# FALLA EN LOG_PROB
 
     def log_prob(self, x, y):
         """
@@ -136,19 +131,17 @@ class HMM:
         x -- sentence.
         y -- tagging.
         """
-        n = self.n
-        m = len(x)
+        assert len(x) == len(y)
 
-        tag_prob = self.tag_prob(y)
+        q_probability = self.tag_log_prob(y)
 
-        probability = 0
-        for i in range(0, m):
-            value = self.out_prob(x[i], y[i])
-            probability += log2Extended(value)
+        e_probability = 0
+        for word, tag in zip(x, y):
+            e_probability += log2Extended(self.out_prob(word, tag))
+
+        probability = q_probability + e_probability
 
         return probability
-        
-
 
     def tag(self, sent):
         """
@@ -156,10 +149,7 @@ class HMM:
 
         sent -- the sentence.
         """
-        n = self.n
-
-        # probability = 1
-        # for i in
+        pass
 
 
 class ViterbiTagger:
