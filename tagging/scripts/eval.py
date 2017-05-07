@@ -17,6 +17,38 @@ from sklearn.metrics import confusion_matrix  # Para la matriz de confusion
 from collections import Counter
 
 
+def printConfusionMatrix(labels, confusion_matrix):
+    length_labels = len(labels)
+    initial_delimiter = True
+    for label in labels:
+        if initial_delimiter:
+            print("| {:^7} |".format(""), end=" ")
+            initial_delimiter = False
+        print("{:^7}".format(label), end=" | ")
+
+    initial_delimiter = True
+    for i in range(length_labels+1):
+        if initial_delimiter:
+            print("\n|", end="")
+            initial_delimiter = False
+        print("{}".format(":-------:"), end="|")
+
+    print("")
+    for row in range(length_labels):  # Filas
+        initial_delimiter = True
+        for column in range(length_labels):  # Columnas
+            value = round(my_confusion_matrix[row][column], 2)
+            if initial_delimiter:
+                print("| {:^7} |".format(labels[row]), end=" ")
+                initial_delimiter = False
+            if value == 0.0:
+                print("{:^7}".format("-"), end=" | ")
+            else:
+                print("{:^7}".format(value), end=" | ")
+        print("")
+    print("")
+
+
 def progress(msg, width=None):
     """
     Ouput the progress of something on the same line.
@@ -122,34 +154,9 @@ if __name__ == '__main__':
     print("\nMatriz de confusion")
     print("===================")
     counter_tags = Counter(tags_gold)
-    labels = [t for t, _ in counter_tags.most_common(10)] # 10 tags mas frec
+    # Obtenemos los 10 tags mas frecuentes
+    labels = [t for t, _ in counter_tags.most_common(10)]
     my_confusion_matrix = confusion_matrix(tags_gold, tags_models, labels)
     my_confusion_matrix = (my_confusion_matrix/total)*100
 
-    initial_delimiter = True
-    for label in labels:
-        if initial_delimiter:
-            print("| {:^7} |".format(""), end=" ")
-            initial_delimiter = False
-        print("{:^7}".format(label), end=" | ")
-
-    initial_delimiter = True
-    for i in range(11):
-        if initial_delimiter:
-            print("\n|", end="")
-            initial_delimiter = False
-        print("{}".format(":-------:"), end="|")
-
-    print("")
-    for row in range(10):  # Filas
-        initial_delimiter = True
-        for column in range(10): # Columnas
-            value = round(my_confusion_matrix[row][column], 2)
-            if initial_delimiter:
-                print("| {:^7} |".format(labels[row]), end = " ")
-                initial_delimiter = False
-            if value == 0.0:
-                print("{:^7}".format("-"), end=" | ")
-            else:
-                print("{:^7}".format(value), end=" | ")
-        print("")
+    printConfusionMatrix(labels, my_confusion_matrix)
