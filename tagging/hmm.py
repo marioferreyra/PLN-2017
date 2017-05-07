@@ -1,4 +1,5 @@
 from math import log
+from collections import defaultdict
 
 
 def addMarkers(tagging, n):
@@ -59,6 +60,8 @@ class HMM:
     def out_prob(self, word, tag):
         """
         Probability of a word given a tag.
+
+            out_prob(word, tag) = e(word | tag)
 
         word -- the word.
         tag -- the tag.
@@ -158,7 +161,7 @@ class ViterbiTagger:
         """
         hmm -- the HMM.
         """
-        pass
+        self.hmm = hmm
 
     def tag(self, sent):
         """
@@ -166,4 +169,19 @@ class ViterbiTagger:
 
         sent -- the sentence.
         """
-        pass
+        hmm = self.hmm  # Hidden Markov Models
+        n = hmm.n
+        m = len(sent) # Tamaño de la oracion
+
+        tagset = hmm.tagset()
+
+        # pi = { key : {tuple_words : tuple_values} }
+        self.pi = pi = defaultdict(lambda: defaultdict(tuple))
+
+        # Inicializacion
+        pi[0][("<s>",)*(n-1)] = (log2Extended(1.0), [])
+
+        # Recursion
+        # for k in range(m):
+        #     for 
+
