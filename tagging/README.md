@@ -110,7 +110,12 @@ __**Nota:**__ *Accuracy* es el porcentaje de etiquetas correctas, es decir, la c
 
 Ejercicio 4: Hidden Markov Models y Algoritmo de Viterbi
 --------------------------------------------------------
+Se implemento en el archivo *hmm.py* la clase *HMM* la cual es una implementacion de los Hidden Markov Model, cuyos parámetros son:
+* Las probabilidades de transición entre estados (las etiquetas).
+* Las probabilidades de emisión de símbolos (las palabras).
 
+<!--Tambien se implemento la clase *ViterbiTagger* la cual es una implementacion del algoritmo de Viterbi que calcula el
+etiquetado más probable de una oración.-->
 
 
 Ejercicio 5: HMM POS Tagger
@@ -119,7 +124,19 @@ Ejercicio 5: HMM POS Tagger
 
 Ejercicio 6: Features para Etiquetado de Secuencias
 ---------------------------------------------------
+Se implemento en el archivo *features.py* lo siguiente:
 
+#### Features Básicos:
+
+* word_lower: La palabra actual en minúsculas.
+* word_istitle: La palabra actual empieza en mayúsculas.
+* word_isupper: La palabra actual está en mayúsculas.
+* word_isdigit: La palabra actual es un número.
+
+#### Features Paramétricos:
+
+* NPrevTags(n): La tupla de los últimos n tags.
+* PrevWord(f): Dado un feature *f*, aplicarlo sobre la palabra anterior en lugar de la actual.
 
 
 Ejercicio 7: Maximum Entropy Markov Models
