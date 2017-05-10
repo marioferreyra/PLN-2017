@@ -55,7 +55,8 @@ class HMM:
         tag -- the tag.
         prev_tags -- tuple with the previous n-1 tags (optional only if n = 1).
         """
-        return self.trans[prev_tags][tag]
+        # return self.trans[prev_tags][tag]
+        return self.trans.get(prev_tags, {}).get(tag, 0.0)
 
     def out_prob(self, word, tag):
         """
@@ -66,7 +67,8 @@ class HMM:
         word -- the word.
         tag -- the tag.
         """
-        return self.out[tag][word]
+        # return self.out[tag][word]
+        return self.out.get(tag, {}).get(word, 0.0)
 
     def tag_prob(self, y):
         """
@@ -125,8 +127,6 @@ class HMM:
 
         return probability
 
-# FALLA EN LOG_PROB
-
     def log_prob(self, x, y):
         """
         Joint log-probability of a sentence and its tagging.
@@ -152,7 +152,7 @@ class HMM:
 
         sent -- the sentence.
         """
-        pass
+        return ViterbiTagger(self).tag(sent)
 
 
 class ViterbiTagger:
@@ -173,15 +173,39 @@ class ViterbiTagger:
         n = hmm.n
         m = len(sent) # Tamaño de la oracion
 
-        tagset = hmm.tagset()
+        tagset = hmm.tagset # Conjunto de tags
 
-        # pi = { key : {tuple_words : tuple_values} }
-        self.pi = pi = defaultdict(lambda: defaultdict(tuple))
+        # pi = { key : { prev_tags : (log_prob, list_tags) } }
+        self._pi = pi = defaultdict(lambda: defaultdict(tuple))
 
         # Inicializacion
         pi[0][("<s>",)*(n-1)] = (log2Extended(1.0), [])
 
         # Recursion
-        # for k in range(m):
-        #     for 
+        for k in range(1, m+1):  # 1 ... m
+            word = sent[k-1]
+            for tag in tagset:
+                e_probability = hmm.out_prob(word, tag)
+                for prev_tags, (log_prob, list_tags) in pi[k-1].items():
+                    q_probability = hmm.trans_prob(tag, prev_tags)
+                    # Analizo los No-Zeros
+                    if q_probability > 0.0:
+                        log_prob += log2Extended(q_probability) + log2Extended(e_probability)
+                        new_list_tags = list_tags + [tag]
+                        prev_tags = (prev_tags + (tag,))[1:]
 
+                        # Bucamos el tag, que de el maximo
+                        if prev_tags not in pi[k-1] or log_prob > pi[k-1][prev_tags][0]:
+                            pi[k][prev_tags] = (log_prob, new_list_tags)
+
+        # Devolver
+        max_log_prob = float("-inf")
+        my_tagging = []
+        for prev_tags, (log_prob, list_tags) in pi[m].items():
+            q_probability = hmm.trans_prob("</s>", prev_tags)
+            log_prob += log2Extended(q_probability)
+            if log_prob > max_log_prob:
+                max_log_prob = log_prob
+                my_tagging = list_tags
+
+        return my_tagging
