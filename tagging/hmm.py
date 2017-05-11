@@ -212,16 +212,69 @@ class ViterbiTagger:
 
 
 class MLHMM(HMM):
-
+    """
+    Heredamos de NGram para poder usar todos sus metodos.
+    """
+    # super(), es una función build-in que sirve para acceder a atributos que
+    # pertenecen a una clase superior.
     def __init__(self, n, tagged_sents, addone=True):
         """
         n -- order of the model.
         tagged_sents -- training sentences, each one being a list of pairs.
         addone -- whether to use addone smoothing (default: True).
         """
+        # Para poder usar los parametros del init de la clase NGram
+        # super().__init__(n, tagset, trans, out)
+
         self.n = n
-        self.tagged_sents = tagged_sents
         self.addone = addone
+        self.tagset = tagset = set()  # Conjuntos de tags
+        self.known = known = set()  # Conjunto de palabras conocidas
+        self.tag_counts = tag_counts = defaultdict(int)  # { tag : count}
+        self.trans = trans = defaultdict(lambda: defaultdict(float))
+        # { prev_tags : {tag : prob} } --> prev_tags es una tupla
+
+        self.out = out = defaultdict(lambda: defaultdict(float))
+        # { tag : {word : prob} }
+
+        # { tag : {word : apariciones} }
+        self.count_paired = defaultdict(lambda: defaultdict(float))
+        # Formamos el conjunto de tags y count_paired
+        for tag_sent in tagged_sents:
+            # words, tags = zip(*tag_sent)
+            for word, tag in tag_sent:
+                tagset.add(tag)
+                known.add(word)
+                self.count_paired[tag][word] += 1
+
+        # Iteramos sobre cada oracion del conjunto de oraciones
+        for tag_sent in tagged_sents:
+            words, tags = zip(*tag_sent)
+            words = addMarkers(list(words), n)
+            tags = addMarkers(list(tags), n)
+
+            # Iteramos sobre los tags de la oracion
+            for i in range(len(tags)-n+1):
+                ngram = tuple(tags[i : i+n])
+                tag_counts[ngram] += 1
+                tag_counts[ngram[:-1]] += 1  # Todos menos el ultimo
+
+        # Calculamos trans_prob
+        for tags in tag_counts.keys():
+            if len(tags) == n:
+                tag = tags[n-1]  # El ultimo tag
+                prev_tags = tags[:-1]  # Todos los tags previos a tag
+                # num = tag_counts[tuple(prev_tags) + (tag, )]
+                # den = tag_counts[tuple(prev_tags)]
+                num = tag_counts[tuple(tags)]
+                den = tag_counts[tuple(prev_tags)]
+                trans[prev_tags][tag] = num / den
+
+        for tag_sent in tagged_sents:
+            for word, tag in tag_sent:
+                num = self.count_paired[tag][word]
+                den = tag_counts[(tag, )]
+                out[tag][word] = num / den
 
     def tcount(self, tokens):
         """
@@ -229,7 +282,7 @@ class MLHMM(HMM):
 
         tokens -- the n-gram or (n-1)-gram tuple of tags.
         """
-        pass
+        return self.tag_counts[tokens]
 
     def unknown(self, w):
         """
@@ -237,8 +290,33 @@ class MLHMM(HMM):
 
         w -- the word.
         """
+        return w not in self.known
 
     """
        Todos los métodos de HMM.
     """
-    pass
+
+# tagged_sents = [
+#             list(zip('el gato come pescado .'.split(), 'D N V N P'.split())),
+#             list(zip('la gata come salmón .'.split(), 'D N V N P'.split())),
+#         ]
+
+# hmm = MLHMM(1, tagged_sents, addone=False)
+
+# print("tagset =", hmm.tagset)
+# print("tcount:")
+# for k, v in hmm.tag_counts.items():
+#     print(k, v)
+# print("trans")
+# for k, v in hmm.trans.items():
+#     print(k, v)
+# print("#### count_paired ####")
+# for k, v in hmm.count_paired.items():
+#     print(k, v)
+# print("#### out ####")
+# for k, v in hmm.out.items():
+#     print(k, v)
+# x = 'el gato come pescado .'.split()
+# y = 'D N V N P'.split()
+# p = hmm.prob(x, y)
+# print("Prob =", p, "|| Correcto =", 0.8 * 0.4 * 0.9)
