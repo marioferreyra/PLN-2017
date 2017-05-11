@@ -162,6 +162,7 @@ class ViterbiTagger:
         hmm -- the HMM.
         """
         self.hmm = hmm
+        # self._pi = pi = defaultdict(lambda: defaultdict(tuple))
 
     def tag(self, sent):
         """
@@ -189,7 +190,7 @@ class ViterbiTagger:
                 for prev_tags, (log_prob, list_tags) in pi[k-1].items():
                     q_probability = hmm.trans_prob(tag, prev_tags)
                     # Analizo los No-Zeros
-                    if q_probability > 0.0:
+                    if q_probability * e_probability > 0.0:
                         log_prob += log2Extended(q_probability) + log2Extended(e_probability)
                         new_list_tags = list_tags + [tag]
                         prev_tags = (prev_tags + (tag,))[1:]
@@ -299,24 +300,14 @@ class MLHMM(HMM):
 # tagged_sents = [
 #             list(zip('el gato come pescado .'.split(), 'D N V N P'.split())),
 #             list(zip('la gata come salmón .'.split(), 'D N V N P'.split())),
-#         ]
+#                ]
 
-# hmm = MLHMM(1, tagged_sents, addone=False)
+# hmm = MLHMM(2, tagged_sents, addone=False)
 
-# print("tagset =", hmm.tagset)
-# print("tcount:")
-# for k, v in hmm.tag_counts.items():
-#     print(k, v)
-# print("trans")
-# for k, v in hmm.trans.items():
-#     print(k, v)
-# print("#### count_paired ####")
-# for k, v in hmm.count_paired.items():
-#     print(k, v)
-# print("#### out ####")
-# for k, v in hmm.out.items():
-#     print(k, v)
-# x = 'el gato come pescado .'.split()
-# y = 'D N V N P'.split()
-# p = hmm.prob(x, y)
-# print("Prob =", p, "|| Correcto =", 0.8 * 0.4 * 0.9)
+# tagger = ViterbiTagger(hmm)
+
+# # print()
+
+# print(tagger._pi)
+# for k, v in tagger._pi.items():
+#     print(k,v)
