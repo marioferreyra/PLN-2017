@@ -185,28 +185,35 @@ class ViterbiTagger:
         for k in range(1, m+1):  # 1 ... m
             word = sent[k-1]
             for tag in tagset:
+                # e(word | tag)
                 e_probability = hmm.out_prob(word, tag)
                 for prev_tags, (log_prob, list_tags) in pi[k-1].items():
+                    # q(tag | prev_tags)
                     q_probability = hmm.trans_prob(tag, prev_tags)
                     # Analizo los No-Zeros
                     if q_probability * e_probability > 0.0:
-                        log_prob += log2Extended(q_probability) + log2Extended(e_probability)
+                        # new_log_prob = PI(k-1, prev_tags) *
+                        #                q(tag | prev_tags) *
+                        #                e(word | tag)
+                        new_log_prob = log_prob + log2Extended(q_probability) + log2Extended(e_probability)
                         new_list_tags = list_tags + [tag]
-                        prev_tags = (prev_tags + (tag,))[1:]
+                        new_prev_tags = (prev_tags + (tag,))[1:]
 
                         # Bucamos el tag, que de el maximo
                         # Con k-1 salta el assert del eval
-                        if prev_tags not in pi[k] or log_prob > pi[k][prev_tags][0]:
-                            pi[k][prev_tags] = (log_prob, new_list_tags)
+                        if (new_prev_tags not in pi[k]) or (new_log_prob > pi[k][new_prev_tags][0]):
+                            pi[k][new_prev_tags] = (new_log_prob, new_list_tags)
 
         # Devolver
         max_log_prob = float("-inf")
         my_tagging = []
         for prev_tags, (log_prob, list_tags) in pi[m].items():
+            # q(STOP | prev_tags)
             q_probability = hmm.trans_prob("</s>", prev_tags)
-            log_prob += log2Extended(q_probability)
-            if log_prob > max_log_prob:
-                max_log_prob = log_prob
+            # new_log_prob = PI(m, prev_tags) * q(tag | prev_tags)
+            new_log_prob = log_prob + log2Extended(q_probability)
+            if new_log_prob > max_log_prob:
+                max_log_prob = new_log_prob
                 my_tagging = list_tags
 
         # Convertimos todos los defaultdict a dict para solucionar el problema

@@ -94,6 +94,8 @@ __**Nota:**__ *Accuracy* es el porcentaje de etiquetas correctas, es decir, la c
 
 #### Matriz de confusión para los 10 tags más frecuentes
 
+Muestra el porcentaje de que una palabra con tag x se haya etiquetado incorrectamente con tag y.
+
 |         |  sp000  | nc0s000 | da0000  | aq0000  |   fc    | nc0p000 |   rg    | np00000 |   fp    |   cc    |
 |:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|
 |  sp000  |  14.28  |  0.05   |    -    |    -    |    -    |    -    |  0.01   |    -    |    -    |    -    |
@@ -110,16 +112,32 @@ __**Nota:**__ *Accuracy* es el porcentaje de etiquetas correctas, es decir, la c
 
 Ejercicio 4: Hidden Markov Models y Algoritmo de Viterbi
 --------------------------------------------------------
-Se implemento en el archivo *hmm.py* la clase *HMM* la cual es una implementacion de los Hidden Markov Model, cuyos parámetros son:
+Se implemento en el archivo *hmm.py* la clase *HMM* la cual es una implementacion de los Hidden Markov Model (modelo Generativo), cuyos parámetros son:
 * Las probabilidades de transición entre estados (las etiquetas).
 * Las probabilidades de emisión de símbolos (las palabras).
 
-<!--Tambien se implemento la clase *ViterbiTagger* la cual es una implementacion del algoritmo de Viterbi que calcula el
-etiquetado más probable de una oración.-->
+Este modelo se encarga de calcular la probabilidad de que una oración sea etiquetada con una secuencia de tags.  
+Para esto, utilizamos la supocición de Markov, la cual calcula lo siguiente:
+
+* Probabilidad de que ocurra un tag, dado que ocurrieron una cierta cantidad de tags previos.
+* Probabilidad de que ocurra una palabra dado un tag (es decir, la palabra observada emparejada con el tag).
+
+Tambien se implemento la clase *ViterbiTagger* la cual es una implementacion del Algoritmo de Viterbi el cual calcula el
+etiquetado más probable de una oración.
+
+Para las implentaciones se siguo las [Notas de Michael Collins].
 
 
 Ejercicio 5: HMM POS Tagger
 ---------------------------
+Se implemento en el archivo *hmm.py* la clase *MLHMM* la cual es una implementacion de los Hidden Markov Model cuyos parámetros se estiman usando Maximum Likelihood sobre un corpus de oraciones etiquetado.  
+Estas estimaciones se hacen por medio de *counts* sobre el corpus de oraciones etiquetado.
+
+Para dicha implementación tambien se siguo las [Notas de Michael Collins].
+
+Tambien se le agrego al script *train.py*, la opcion de entrenar un "Maximum Likelihood Markov Model" de parametro *N* (Por los n-gramas).
+
+#### Accuracy de los modelos entrenados con MLHMM, con su tiempo de evaluación
 
 
 Ejercicio 6: Features para Etiquetado de Secuencias
@@ -141,3 +159,8 @@ Se implemento en el archivo *features.py* lo siguiente:
 
 Ejercicio 7: Maximum Entropy Markov Models
 ------------------------------------------
+
+
+
+
+[Notas de Michael Collins]: http://www.cs.columbia.edu/~mcollins/hmms-spring2013.pdf
