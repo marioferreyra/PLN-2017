@@ -9,9 +9,7 @@ def addMarkers(tagging, n):
             * 1 marcadores </s> al final.
     """
     # Añadimos marcadores de comienzo y fin de tagging.
-    tagging = ["<s>"]*(n-1) + tagging + ["</s>"]
-
-    return tagging
+    return ["<s>"]*(n-1) + tagging + ["</s>"]
 
 
 def log2Extended(x):
@@ -278,7 +276,7 @@ class MLHMM(HMM):
         # Calculamos trans_prob
         for tags in tag_counts.keys():
             if len(tags) == n:
-                tag = tags[n-1]  # El ultimo tag
+                tag = tags[-1]  # El ultimo tag
                 prev_tags = tags[:-1]  # Todos los tags previos a tag
                 # num = tag_counts[tuple(prev_tags) + (tag, )]
                 # den = tag_counts[tuple(prev_tags)]
@@ -308,7 +306,6 @@ class MLHMM(HMM):
         print("Len Tag Counts = {}\n".format(len(tag_counts)))
         print("Len Trans = {}\n".format(len(trans)))
         print("Len Out = {}\n".format(len(out)))
-
 
     def tcount(self, tokens):
         """
