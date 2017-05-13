@@ -52,6 +52,8 @@ class HMM:
         """
         Probability of a tag.
 
+            trans_prob(tag, prev_tags) = q(tag | prev_tags)
+
         tag -- the tag.
         prev_tags -- tuple with the previous n-1 tags (optional only if n = 1).
         """
@@ -162,7 +164,6 @@ class ViterbiTagger:
         hmm -- the HMM.
         """
         self.hmm = hmm
-        # self._pi = pi = defaultdict(lambda: defaultdict(tuple))
 
     def tag(self, sent):
         """
@@ -196,7 +197,8 @@ class ViterbiTagger:
                         prev_tags = (prev_tags + (tag,))[1:]
 
                         # Bucamos el tag, que de el maximo
-                        if prev_tags not in pi[k-1] or log_prob > pi[k-1][prev_tags][0]:
+                        # Con k-1 salta el assert del eval
+                        if prev_tags not in pi[k] or log_prob > pi[k][prev_tags][0]:
                             pi[k][prev_tags] = (log_prob, new_list_tags)
 
         # Devolver
@@ -209,9 +211,15 @@ class ViterbiTagger:
                 max_log_prob = log_prob
                 my_tagging = list_tags
 
+        # Convertimos todos los defaultdict a dict para solucionar el problema
+        # de que pickle.dump no puede guardar funciones lambda
+        self._pi = dict(pi)
+
         return my_tagging
 
-
+# FALLA: El train para n > 2 ->_<- SOLUCION: Arreglado con el condicional de abajo
+# FALLA: El eval con n>=1, salta el assert
+# El problema esta aca
 class MLHMM(HMM):
     """
     Heredamos de NGram para poder usar todos sus metodos.
@@ -229,32 +237,39 @@ class MLHMM(HMM):
 
         self.n = n
         self.addone = addone
+
         self.tagset = tagset = set()  # Conjuntos de tags
-        self.known = known = set()  # Conjunto de palabras conocidas
+        self.known_words = known_words = set()  # Conjunto de palabras conocidas
+
         self.tag_counts = tag_counts = defaultdict(int)  # { tag : count}
+        self.count_paired = defaultdict(lambda: defaultdict(int))
+        # { tag : {word : apariciones} }
         self.trans = trans = defaultdict(lambda: defaultdict(float))
         # { prev_tags : {tag : prob} } --> prev_tags es una tupla
-
         self.out = out = defaultdict(lambda: defaultdict(float))
         # { tag : {word : prob} }
 
-        # { tag : {word : apariciones} }
-        self.count_paired = defaultdict(lambda: defaultdict(float))
         # Formamos el conjunto de tags y count_paired
         for tag_sent in tagged_sents:
-            # words, tags = zip(*tag_sent)
             for word, tag in tag_sent:
                 tagset.add(tag)
-                known.add(word)
+                known_words.add(word)
                 self.count_paired[tag][word] += 1
+        tagset.add("</s>")  # Agregamos el marcador </s>
 
         # Iteramos sobre cada oracion del conjunto de oraciones
         for tag_sent in tagged_sents:
-            words, tags = zip(*tag_sent)
-            words = addMarkers(list(words), n)
-            tags = addMarkers(list(tags), n)
+            # words, tags = zip(*tag_sent)
+            # Comentamos la linea de arriba porque en el train.py me tira error
+            # -->ValueError: not enough values to unpack (expected 2, got 0)<--
+            # Que significa que python esperaba que hubiera dos valores de
+            # retorno de zip (), pero no había ninguno.
 
-            # Iteramos sobre los tags de la oracion
+            words = [word for word, tag in tag_sent]
+            tags = [tag for word, tag in tag_sent]
+            words = addMarkers(words, n)
+            tags = addMarkers(tags, n)
+
             for i in range(len(tags)-n+1):
                 ngram = tuple(tags[i : i+n])
                 tag_counts[ngram] += 1
@@ -269,13 +284,31 @@ class MLHMM(HMM):
                 # den = tag_counts[tuple(prev_tags)]
                 num = tag_counts[tuple(tags)]
                 den = tag_counts[tuple(prev_tags)]
-                trans[prev_tags][tag] = num / den
+                trans[prev_tags][tag] = float(num) / den
 
+        # Calculamos out_prob
         for tag_sent in tagged_sents:
             for word, tag in tag_sent:
                 num = self.count_paired[tag][word]
                 den = tag_counts[(tag, )]
-                out[tag][word] = num / den
+                # Arreglar Division por 0
+                if den == 0:
+                    out[tag][word] = 0.0
+                else:
+                    out[tag][word] = float(num) / den
+
+        # Convertimos todos los defaultdict a dict para solucionar el problema
+        # de que pickle.dump no puede guardar funciones lambda
+        self.count_paired = dict(self.count_paired)
+        self.trans = dict(trans)
+        self.out = dict(out)
+
+        print("Len Tagset = {}\n".format(len(tagset)))
+        print("Len Known Words = {}\n".format(len(known_words)))
+        print("Len Tag Counts = {}\n".format(len(tag_counts)))
+        print("Len Trans = {}\n".format(len(trans)))
+        print("Len Out = {}\n".format(len(out)))
+
 
     def tcount(self, tokens):
         """
@@ -291,23 +324,28 @@ class MLHMM(HMM):
 
         w -- the word.
         """
-        return w not in self.known
+        return w not in self.known_words
 
-    """
-       Todos los métodos de HMM.
-    """
+    def trans_prob(self, tag, prev_tags):
+        """
+        Probability of a tag.
 
-# tagged_sents = [
-#             list(zip('el gato come pescado .'.split(), 'D N V N P'.split())),
-#             list(zip('la gata come salmón .'.split(), 'D N V N P'.split())),
-#                ]
+            trans_prob(tag, prev_tags) = q(tag | prev_tags)
 
-# hmm = MLHMM(2, tagged_sents, addone=False)
+        tag -- the tag.
+        prev_tags -- tuple with the previous n-1 tags (optional only if n = 1).
+        """
+        # return self.trans[prev_tags][tag]
+        return self.trans.get(prev_tags, {}).get(tag, 0.0)
 
-# tagger = ViterbiTagger(hmm)
+    def out_prob(self, word, tag):
+        """
+        Probability of a word given a tag.
 
-# # print()
+            out_prob(word, tag) = e(word | tag)
 
-# print(tagger._pi)
-# for k, v in tagger._pi.items():
-#     print(k,v)
+        word -- the word.
+        tag -- the tag.
+        """
+        # return self.out[tag][word]
+        return self.out.get(tag, {}).get(word, 0.0)

@@ -2,12 +2,14 @@
 Train a sequence tagger.
 
 Usage:
-  train.py [-m <model>] -o <file>
+  train.py [-m <model>] [-n <n>] -o <file>
   train.py -h | --help
 
 Options:
   -m <model>    Model to use [default: base]:
                   base: Baseline
+                  mlhmm: Maximum Likehood Hidden Markov Model
+  -n <n>        Order of the model MLHMM.
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
@@ -15,10 +17,12 @@ import pickle
 from docopt import docopt
 from corpus.ancora import SimpleAncoraCorpusReader
 from tagging.baseline import BaselineTagger
+from tagging.hmm import MLHMM
 
 
 models = {
-    'base': BaselineTagger,
+    "base": BaselineTagger,
+    "mlhmm": MLHMM
 }
 
 
@@ -33,8 +37,13 @@ if __name__ == '__main__':
 
     # Train the model
     m = str(opts['-m'])
-    print("##### Baseline Tagger #####")
-    model = models[m](sents)
+    n = int(opts['-n'])
+    if m == "mlhmm":
+        print("##### MLHMM #####")
+        model = models[m](n, sents)
+    else:
+        print("##### Baseline Tagger #####")
+        model = models[m](sents)
 
     # Save it
     filename = opts['-o']

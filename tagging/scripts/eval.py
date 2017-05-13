@@ -100,6 +100,7 @@ if __name__ == '__main__':
         tags_gold += list(gold_tag_sent)
         tags_models += model_tag_sent
 
+        print(len(model_tag_sent), len(gold_tag_sent))
         assert len(model_tag_sent) == len(gold_tag_sent), i
 
         # Global score
@@ -133,13 +134,13 @@ if __name__ == '__main__':
         total_unknown_word += len(hits_unknown)
         acc_unknown_word = float(hits_unknown_word) / total_unknown_word
 
-        progress("Porcentaje {:3.1f}% ==> \
-(Global {:2.2f}%) \
-(Know {:2.2f}%) \
-(Unknown {:2.2f}%)".format((float(i)/n)*100,
-                           acc_global*100,
-                           acc_known_word*100,
-                           acc_unknown_word*100))
+#         progress("Porcentaje {:3.1f}% ==> \
+# (Global {:2.2f}%) \
+# (Know {:2.2f}%) \
+# (Unknown {:2.2f}%)".format((float(i)/n)*100,
+#                            acc_global*100,
+#                            acc_known_word*100,
+#                            acc_unknown_word*100))
 
     acc_global = float(hits) / total
     acc_known_word = float(hits_known_word) / total_known_word
