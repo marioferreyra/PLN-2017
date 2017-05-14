@@ -227,42 +227,37 @@ class ViterbiTagger:
 # El problema esta aca
 class MLHMM(HMM):
     """
-    Heredamos de NGram para poder usar todos sus metodos.
+    Heredamos de HMM para poder usar todos sus metodos.
     """
-    # super(), es una función build-in que sirve para acceder a atributos que
-    # pertenecen a una clase superior.
     def __init__(self, n, tagged_sents, addone=True):
         """
         n -- order of the model.
         tagged_sents -- training sentences, each one being a list of pairs.
         addone -- whether to use addone smoothing (default: True).
         """
-        # Para poder usar los parametros del init de la clase NGram
-        # super().__init__(n, tagset, trans, out)
-
         self.n = n
         self.addone = addone
 
         self.tagset = tagset = set()  # Conjuntos de tags
-        self.known_words = known_words = set()  # Conjunto de palabras conocidas
+        self.vocabulary = vocabulary = set()  # Conjunto de palabras conocidas
 
-        self.tag_counts = tag_counts = defaultdict(int)  # { tag : count}
-        self.count_paired = defaultdict(lambda: defaultdict(int))
+        # { tag : count } --> tag es una tupla
+        self.tag_counts = tag_counts = defaultdict(int)
         # { tag : {word : apariciones} }
-        self.trans = trans = defaultdict(lambda: defaultdict(float))
+        self.count_paired = count_paired = defaultdict(lambda: defaultdict(int))
         # { prev_tags : {tag : prob} } --> prev_tags es una tupla
-        self.out = out = defaultdict(lambda: defaultdict(float))
+        self.trans = trans = defaultdict(lambda: defaultdict(float))
         # { tag : {word : prob} }
+        self.out = out = defaultdict(lambda: defaultdict(float))
 
         # Formamos el conjunto de tags y count_paired
         for tag_sent in tagged_sents:
             for word, tag in tag_sent:
                 tagset.add(tag)
-                known_words.add(word)
-                self.count_paired[tag][word] += 1
-        tagset.add("</s>")  # Agregamos el marcador </s>
+                vocabulary.add(word)
+                count_paired[tag][word] += 1
 
-        # Iteramos sobre cada oracion del conjunto de oraciones
+        # Iteramos sobre cada oracion taggeada del conjunto de oraciones taggeada
         for tag_sent in tagged_sents:
             # words, tags = zip(*tag_sent)
             # Comentamos la linea de arriba porque en el train.py me tira error
@@ -280,39 +275,36 @@ class MLHMM(HMM):
                 tag_counts[ngram] += 1
                 tag_counts[ngram[:-1]] += 1  # Todos menos el ultimo
 
-        # Calculamos trans_prob
+        # Calculamos trans_prob:
+        #                       count(prev_tags tag)
+        # q(tag | prev_tags) = ----------------------
+        #                         count(prev_tags)
         for tags in tag_counts.keys():
             if len(tags) == n:
                 tag = tags[-1]  # El ultimo tag
                 prev_tags = tags[:-1]  # Todos los tags previos a tag
-                # num = tag_counts[tuple(prev_tags) + (tag, )]
-                # den = tag_counts[tuple(prev_tags)]
-                num = tag_counts[tuple(tags)]
-                den = tag_counts[tuple(prev_tags)]
-                trans[prev_tags][tag] = float(num) / den
+                c_tags = tag_counts[tags]
+                c_prevtags = tag_counts[prev_tags]
+                trans[prev_tags][tag] = float(c_tags) / c_prevtags
 
-        # Calculamos out_prob
+        # Calculamos out_prob:
+        #                  count(tag --> word)
+        # e(word | tag) = ---------------------
+        #                      count(tag)
         for tag_sent in tagged_sents:
             for word, tag in tag_sent:
-                num = self.count_paired[tag][word]
-                den = tag_counts[(tag, )]
-                # Arreglar Division por 0
-                if den == 0:
+                c_tagword = count_paired[tag][word]  # count(tag --> word)
+                c_tag = tag_counts[(tag,)]
+                if c_tag == 0:
                     out[tag][word] = 0.0
                 else:
-                    out[tag][word] = float(num) / den
+                    out[tag][word] = float(c_tagword) / c_tag
 
         # Convertimos todos los defaultdict a dict para solucionar el problema
         # de que pickle.dump no puede guardar funciones lambda
-        self.count_paired = dict(self.count_paired)
+        self.count_paired = dict(count_paired)
         self.trans = dict(trans)
         self.out = dict(out)
-
-        print("Len Tagset = {}\n".format(len(tagset)))
-        print("Len Known Words = {}\n".format(len(known_words)))
-        print("Len Tag Counts = {}\n".format(len(tag_counts)))
-        print("Len Trans = {}\n".format(len(trans)))
-        print("Len Out = {}\n".format(len(out)))
 
     def tcount(self, tokens):
         """
@@ -320,7 +312,7 @@ class MLHMM(HMM):
 
         tokens -- the n-gram or (n-1)-gram tuple of tags.
         """
-        return self.tag_counts[tokens]
+        return self.tag_counts.get(tokens, 0)
 
     def unknown(self, w):
         """
@@ -328,28 +320,64 @@ class MLHMM(HMM):
 
         w -- the word.
         """
-        return w not in self.known_words
+        return w not in self.vocabulary
+
+    def V(self):
+        """
+        Size of the vocabulary of words.
+        """
+        return len(self.vocabulary)
+
+    def T(self):
+        """
+        Size of the vocabulary of tags.
+        """
+        return len(self.tagset) + 1  # El "+ 1" es por el marcador </s>
 
     def trans_prob(self, tag, prev_tags):
         """
         Probability of a tag.
 
-            trans_prob(tag, prev_tags) = q(tag | prev_tags)
-
         tag -- the tag.
         prev_tags -- tuple with the previous n-1 tags (optional only if n = 1).
+
+                    trans_prob(tag, prev_tags) = q(tag | prev_tags)
+
+        si es addone:
+                                      count(prev_tags tag) + 1
+                q(tag | prev_tags) = --------------------------
+                                       count(prev_tags) + V
+
+                Donde V = |tagset|
         """
-        # return self.trans[prev_tags][tag]
-        return self.trans.get(prev_tags, {}).get(tag, 0.0)
+        if self.addone:
+            tags = prev_tags + (tag,)
+            c_tags_1 = float(self.tcount(tags) + 1)
+            c_prevtags_T = self.tcount(prev_tags) + self.T()
+            probability = c_tags_1 / c_prevtags_T
+        else:
+            probability = self.trans.get(prev_tags, {}).get(tag, 0.0)
+
+        return probability
 
     def out_prob(self, word, tag):
         """
         Probability of a word given a tag.
 
-            out_prob(word, tag) = e(word | tag)
-
         word -- the word.
         tag -- the tag.
+
+                    out_prob(word, tag) = e(word | tag)
+
+        Para P(x|y) hacer lo siguiente:
+        1. Si la palabra es desconocida, devolver 1 / V a donde V es el
+           tamaño del vocabulario.
+        2. Si la palabra es conocida, devolver la Maximum Likelihood
+           (sin addone ni nada, hasta puede dar cero).
         """
-        # return self.out[tag][word]
-        return self.out.get(tag, {}).get(word, 0.0)
+        if self.addone and self.unknown(word):
+            probability = 1.0 / self.V()
+        else:
+            probability = self.out.get(tag, {}).get(word, 0.0)
+
+        return probability
