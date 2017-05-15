@@ -4,10 +4,10 @@ from collections import namedtuple
 from featureforge.feature import Feature
 
 
+History = namedtuple('History', 'sent prev_tags i')
 # sent -- the whole sentence.
 # prev_tags -- a tuple with the n previous tags.
 # i -- the position to be tagged.
-History = namedtuple('History', 'sent prev_tags i')
 
 
 def word_lower(h):
@@ -90,7 +90,7 @@ class NPrevTags(Feature):
         n = self.n
         prev_tags = h.prev_tags
 
-        return prev_tags[-n:]
+        return prev_tags[-n:] # Los ultimos 'n' elementos
 
 
 class PrevWord(Feature):
