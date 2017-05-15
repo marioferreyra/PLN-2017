@@ -2,14 +2,13 @@ from math import log
 from collections import defaultdict
 
 
-def addMarkers(tagging, n):
+def addMarkers(my_list, n):
     """
-    Agrega a un tagging:
+    Agrega a una lista:
             * n-1 marcadores <s> al comienzo y
             * 1 marcadores </s> al final.
     """
-    # Añadimos marcadores de comienzo y fin de tagging.
-    return ["<s>"]*(n-1) + tagging + ["</s>"]
+    return ["<s>"]*(n-1) + my_list + ["</s>"]
 
 
 def log2Extended(x):
@@ -171,9 +170,9 @@ class ViterbiTagger:
         """
         hmm = self.hmm  # Hidden Markov Models
         n = hmm.n
-        m = len(sent) # Tamaño de la oracion
+        m = len(sent)  # Tamaño de la oracion
 
-        tagset = hmm.tagset # Conjunto de tags
+        tagset = hmm.tagset  # Conjunto de tags
 
         # pi = { key : { prev_tags : (log_prob, list_tags) } }
         self._pi = pi = defaultdict(lambda: defaultdict(tuple))
@@ -195,14 +194,16 @@ class ViterbiTagger:
                         # new_log_prob = PI(k-1, prev_tags) *
                         #                q(tag | prev_tags) *
                         #                e(word | tag)
-                        new_log_prob = log_prob + log2Extended(q_probability) + log2Extended(e_probability)
-                        new_list_tags = list_tags + [tag]
+                        new_log_prob = log_prob + log2Extended(q_probability)
+                        new_log_prob += log2Extended(e_probability)
+                        new_list_tag = list_tags + [tag]
                         new_prev_tags = (prev_tags + (tag,))[1:]
 
                         # Bucamos el tag, que de el maximo
                         # Con k-1 salta el assert del eval
-                        if (new_prev_tags not in pi[k]) or (new_log_prob > pi[k][new_prev_tags][0]):
-                            pi[k][new_prev_tags] = (new_log_prob, new_list_tags)
+                        if ((new_prev_tags not in pi[k]) or
+                           (new_log_prob > pi[k][new_prev_tags][0])):
+                            pi[k][new_prev_tags] = (new_log_prob, new_list_tag)
 
         # Devolver
         max_log_prob = float("-inf")
@@ -222,9 +223,7 @@ class ViterbiTagger:
 
         return my_tagging
 
-# FALLA: El train para n > 2 ->_<- SOLUCION: Arreglado con el condicional de abajo
-# FALLA: El eval con n>=1, salta el assert
-# El problema esta aca
+
 class MLHMM(HMM):
     """
     Heredamos de HMM para poder usar todos sus metodos.
@@ -243,42 +242,43 @@ class MLHMM(HMM):
 
         # { tag : count } --> tag es una tupla
         self.tag_counts = tag_counts = defaultdict(int)
-        # { tag : {word : apariciones} }
-        self.count_paired = count_paired = defaultdict(lambda: defaultdict(int))
         # { prev_tags : {tag : prob} } --> prev_tags es una tupla
         self.trans = trans = defaultdict(lambda: defaultdict(float))
         # { tag : {word : prob} }
         self.out = out = defaultdict(lambda: defaultdict(float))
 
         # Formamos el conjunto de tags y count_paired
-        for tag_sent in tagged_sents:
-            for word, tag in tag_sent:
+        for sent_tagging in tagged_sents:
+            for word, tag in sent_tagging:
                 tagset.add(tag)
                 vocabulary.add(word)
-                count_paired[tag][word] += 1
 
-        # Iteramos sobre cada oracion taggeada del conjunto de oraciones taggeada
-        for tag_sent in tagged_sents:
-            # words, tags = zip(*tag_sent)
+        # Iteramos sobre cada oracion taggeada del conjunto de oraciones
+        # taggeada
+        for sent_tagging in tagged_sents:
+            # words, tags = zip(*sent_tagging)
             # Comentamos la linea de arriba porque en el train.py me tira error
             # -->ValueError: not enough values to unpack (expected 2, got 0)<--
             # Que significa que python esperaba que hubiera dos valores de
             # retorno de zip (), pero no había ninguno.
 
-            words = [word for word, tag in tag_sent]
-            tags = [tag for word, tag in tag_sent]
+            words = [word for word, tag in sent_tagging]
+            tags = [tag for word, tag in sent_tagging]
             words = addMarkers(words, n)
             tags = addMarkers(tags, n)
 
             for i in range(len(tags)-n+1):
-                ngram = tuple(tags[i : i+n])
-                tag_counts[ngram] += 1
-                tag_counts[ngram[:-1]] += 1  # Todos menos el ultimo
+                ngram = tuple(tags[i: i+n])
+                prev_ngram = ngram[:-1]
+                tag_counts[ngram] += 1  # Los n-gramas
+                tag_counts[prev_ngram] += 1  # Los (n-1)-gramas
+                out[tags[i+n-1]][words[i+n-1]] += 1
 
         # Calculamos trans_prob:
         #                       count(prev_tags tag)
         # q(tag | prev_tags) = ----------------------
         #                         count(prev_tags)
+        # { prev_tags : {tag : prob} } --> prev_tags es una tupla
         for tags in tag_counts.keys():
             if len(tags) == n:
                 tag = tags[-1]  # El ultimo tag
@@ -291,18 +291,15 @@ class MLHMM(HMM):
         #                  count(tag --> word)
         # e(word | tag) = ---------------------
         #                      count(tag)
-        for tag_sent in tagged_sents:
-            for word, tag in tag_sent:
-                c_tagword = count_paired[tag][word]  # count(tag --> word)
-                c_tag = tag_counts[(tag,)]
-                if c_tag == 0:
-                    out[tag][word] = 0.0
-                else:
-                    out[tag][word] = float(c_tagword) / c_tag
+        # { tag : {word : count} } --> { tag : {word : prob} }
+        for word_count in out.values():
+            total = sum(word_count.values())
+            for word, count in word_count.items():
+                prob = float(count) / total
+                word_count[word] = prob
 
         # Convertimos todos los defaultdict a dict para solucionar el problema
         # de que pickle.dump no puede guardar funciones lambda
-        self.count_paired = dict(count_paired)
         self.trans = dict(trans)
         self.out = dict(out)
 
@@ -343,18 +340,18 @@ class MLHMM(HMM):
 
                     trans_prob(tag, prev_tags) = q(tag | prev_tags)
 
-        si es addone:
+        si Addone:
                                       count(prev_tags tag) + 1
                 q(tag | prev_tags) = --------------------------
                                        count(prev_tags) + V
 
-                Donde V = |tagset|
+                Donde V = |tagset| + 1 (Por el marcador </s>)
         """
         if self.addone:
             tags = prev_tags + (tag,)
-            c_tags_1 = float(self.tcount(tags) + 1)
+            c_tags_1 = self.tcount(tags) + 1
             c_prevtags_T = self.tcount(prev_tags) + self.T()
-            probability = c_tags_1 / c_prevtags_T
+            probability = float(c_tags_1) / c_prevtags_T
         else:
             probability = self.trans.get(prev_tags, {}).get(tag, 0.0)
 
