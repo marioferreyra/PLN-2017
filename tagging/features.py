@@ -90,7 +90,7 @@ class NPrevTags(Feature):
         n = self.n
         prev_tags = h.prev_tags
 
-        return prev_tags[-n:] # Los ultimos 'n' elementos
+        return prev_tags[-n:]  # Los ultimos 'n' elementos
 
 
 class PrevWord(Feature):

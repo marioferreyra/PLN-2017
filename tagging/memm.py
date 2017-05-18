@@ -71,7 +71,7 @@ class MEMM:
 
         print("    -->Comienzo del fit")
         # CUANDO HAGO EL TRAIN SE QUEDA COLGADO EN EL FIT
-        self.pipeline = pipe.fit(X, y) # TODAVIA NOSE PORQUE ANDA, NO ENTIENDO LO DEL y
+        self.pipeline = pipe.fit(X, y)  # TODAVIA NOSE PORQUE ANDA, NO ENTIENDO
         print("    Fit finalizado")
         print("Pipeline Finalizado")
 
@@ -91,20 +91,20 @@ class MEMM:
         """
         # Recordar:
         # History = namedtuple('History', 'sent prev_tags i')
-                    # sent -- the whole sentence.
-                    # prev_tags -- a tuple with the n previous tags.
-                    # i -- the position to be tagged.
+        # sent -- the whole sentence.
+        # prev_tags -- a tuple with the n previous tags.
+        # i -- the position to be tagged.
         n = self.n
         words = [word for word, tag in tagged_sent]  # W[1:n] = sent
-        tags = [tag for word, tag in tagged_sent] # lista de tags
+        tags = [tag for word, tag in tagged_sent]  # lista de tags
 
-        tags = ["<s>"]*(n-1) + tags # Lista de tags con para casos de borde
+        tags = ["<s>"]*(n-1) + tags  # Lista de tags con para casos de borde
 
-        m = len(words) # Largo de la lista
+        m = len(words)  # Largo de la lista
 
         my_histories = []
         for i in range(m):
-            prev_tags = tuple(tags[i: i+n-1]) # n tags previos a la posicion i
+            prev_tags = tuple(tags[i: i+n-1])  # n tags previos a la posicion i
             # print(i, prev_tags)
             my_histories += [History(words, prev_tags, i)]
 
@@ -152,7 +152,6 @@ class MEMM:
         # self.pipeline.predict(X) Me devuelve una lista de un elemento
         return self.pipeline.predict(X)[0]
 
-
     def tag(self, sent):
         """
         Tag a sentence.
@@ -160,7 +159,7 @@ class MEMM:
         sent -- the sentence.
         """
         n = self.n
-        m = len(sent) # Largo de la oracion
+        m = len(sent)  # Largo de la oracion
 
         prev_tags = ("<s>",)*(n-1)
         history = History(sent, prev_tags, 0)

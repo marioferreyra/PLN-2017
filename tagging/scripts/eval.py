@@ -100,9 +100,6 @@ if __name__ == '__main__':
         tags_gold += list(gold_tag_sent)
         tags_models += model_tag_sent
 
-        if len(model_tag_sent) != len(gold_tag_sent):
-            print("My Model = {} | Gold Model = {}".format(len(model_tag_sent), len(gold_tag_sent)))
-            print("### ASSERT ###")
         assert len(model_tag_sent) == len(gold_tag_sent), i
 
         # Global score
