@@ -1,5 +1,5 @@
-from collections import namedtuple
 # http://stackoverflow.com/questions/2970608/what-are-named-tuples-in-python
+from collections import namedtuple
 
 from featureforge.feature import Feature
 

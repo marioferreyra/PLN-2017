@@ -31,25 +31,49 @@ class MEMM:
         self.n = n
         self.vocabulary = vocabulary = set()  # Conjunto de palabras conocidas
 
+        print("-->Computar vocabulario")
         # Formamos el conjunto de tags
         for sent_tagging in tagged_sents:
             for word, tag in sent_tagging:
                 vocabulary.add(word)
+        print("Vocabulario computado")
 
         # Formamos el vector de features
+        print("-->Cargar features")
         basic_features = [word_lower, word_istitle, word_isupper]
         basic_features += [word_isdigit, prev_tags]
 
-        parametric_features = [NPrevTags(f) for f in basic_features]
-        parametric_features += [PrevWord(i) for i in range(n)]
+        parametric_features = [NPrevTags(i) for i in range(n)]
+        parametric_features += [PrevWord(f) for f in basic_features]
 
         features = basic_features + parametric_features
+        print("Features cargados")
 
-        # v = Vectorizer(features)
+        print("-->Comienzo del Pipeline")
+        print("    -->Cargar Vector de features y Clasificador")
+        v = Vectorizer(features)  # Se instancia con una lista de features
+        c = LogisticRegression()  # Clasificador de máxima entropía
+        print("    Vector de features y Clasificador cargados")
+        print("    -->Cargar Pipeline")
+        pipe = Pipeline([("vectorizador", v), ("clasificador", c)])
+        print("    Pipeline cargado")
 
-        # p = Pipeline([v])
+        # Datos de entrenamiento (training_data)
+        # Los features trabajan sobre las History
+        print("    -->Cargar datos de entrenamiento")
+        X = self.sents_histories(tagged_sents)
+        print("    Datos de entrenamiento cargados")
 
-        # p.fit(data) # data is a sequence of data points
+        # Objetivos de entrenamiento (training_targets)
+        print("    -->Cargar objetivos de entrenamiento")
+        y = self.sents_tags(tagged_sents)  # Lista de tags
+        print("    Objetivos de entrenamiento cargados")
+
+        print("    -->Comienzo del fit")
+        # CUANDO HAGO EL TRAIN SE QUEDA COLGADO EN EL FIT
+        self.pipeline = pipe.fit(X, y) # TODAVIA NOSE PORQUE ANDA, NO ENTIENDO LO DEL y
+        print("    Fit finalizado")
+        print("Pipeline Finalizado")
 
     def unknown(self, w):
         """
@@ -76,7 +100,7 @@ class MEMM:
 
         tags = ["<s>"]*(n-1) + tags # Lista de tags con para casos de borde
 
-        m = len(words) # Largo de las palabras
+        m = len(words) # Largo de la lista
 
         my_histories = []
         for i in range(m):
@@ -124,7 +148,10 @@ class MEMM:
 
         h -- the history.
         """
-        pass
+        X = [h]  # Tiene que ser iterable
+        # self.pipeline.predict(X) Me devuelve una lista de un elemento
+        return self.pipeline.predict(X)[0]
+
 
     def tag(self, sent):
         """
@@ -132,4 +159,16 @@ class MEMM:
 
         sent -- the sentence.
         """
-        pass
+        n = self.n
+        m = len(sent) # Largo de la oracion
+
+        prev_tags = ("<s>",)*(n-1)
+        history = History(sent, prev_tags, 0)
+        my_tagging = [self.tag_history(history)]
+
+        for i in range(1, m):
+            prev_tags = prev_tags[1:] + tuple(my_tagging)
+            history = History(sent, prev_tags, i)
+            my_tagging += [self.tag_history(history)]
+
+        return my_tagging

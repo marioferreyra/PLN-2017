@@ -9,7 +9,8 @@ Options:
   -m <model>    Model to use [default: base]:
                   base: Baseline
                   mlhmm: Maximum Likehood Hidden Markov Model
-  -n <n>        Order of the model MLHMM.
+                  memm: Maximum Entropy Hidden Markov Model
+  -n <n>        Order of the model MLHMM and MEMM.
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
@@ -18,11 +19,13 @@ from docopt import docopt
 from corpus.ancora import SimpleAncoraCorpusReader
 from tagging.baseline import BaselineTagger
 from tagging.hmm import MLHMM
+from tagging.memm import MEMM
 
 
 models = {
     "base": BaselineTagger,
-    "mlhmm": MLHMM
+    "mlhmm": MLHMM,
+    "memm": MEMM
 }
 
 
@@ -37,9 +40,14 @@ if __name__ == '__main__':
 
     # Train the model
     m = str(opts['-m'])
-    n = int(opts['-n'])
+    if m in {"mlhmm", "memm"}:
+        n = int(opts['-n'])
+
     if m == "mlhmm":
         print("##### MLHMM #####")
+        model = models[m](n, sents)
+    elif m == "memm":
+        print("##### MEMM #####")
         model = models[m](n, sents)
     else:
         print("##### Baseline Tagger #####")
