@@ -54,7 +54,6 @@ class HMM:
         tag -- the tag.
         prev_tags -- tuple with the previous n-1 tags (optional only if n = 1).
         """
-        # return self.trans[prev_tags][tag]
         return self.trans.get(prev_tags, {}).get(tag, 0.0)
 
     def out_prob(self, word, tag):
@@ -66,7 +65,6 @@ class HMM:
         word -- the word.
         tag -- the tag.
         """
-        # return self.out[tag][word]
         return self.out.get(tag, {}).get(word, 0.0)
 
     def tag_prob(self, y):
@@ -244,6 +242,8 @@ class MLHMM(HMM):
         self.tag_counts = tag_counts = defaultdict(int)
         # { prev_tags : {tag : prob} } --> prev_tags es una tupla
         self.trans = trans = defaultdict(lambda: defaultdict(float))
+        # { tag : {word : count} }
+        count_paired = defaultdict(lambda: defaultdict(float))
         # { tag : {word : prob} }
         self.out = out = defaultdict(lambda: defaultdict(float))
 
@@ -252,6 +252,7 @@ class MLHMM(HMM):
             for word, tag in sent_tagging:
                 tagset.add(tag)
                 vocabulary.add(word)
+                count_paired[tag][word] += 1
 
         # Iteramos sobre cada oracion taggeada del conjunto de oraciones
         # taggeada
@@ -272,7 +273,6 @@ class MLHMM(HMM):
                 prev_ngram = ngram[:-1]
                 tag_counts[ngram] += 1  # Los n-gramas
                 tag_counts[prev_ngram] += 1  # Los (n-1)-gramas
-                out[tags[i+n-1]][words[i+n-1]] += 1
 
         # Calculamos trans_prob:
         #                       count(prev_tags tag)
@@ -292,11 +292,11 @@ class MLHMM(HMM):
         # e(word | tag) = ---------------------
         #                      count(tag)
         # { tag : {word : count} } --> { tag : {word : prob} }
-        for word_count in out.values():
+        for tag, word_count in count_paired.items():
             total = sum(word_count.values())
             for word, count in word_count.items():
                 prob = float(count) / total
-                word_count[word] = prob
+                out[tag][word] = prob
 
         # Convertimos todos los defaultdict a dict para solucionar el problema
         # de que pickle.dump no puede guardar funciones lambda
@@ -343,9 +343,9 @@ class MLHMM(HMM):
         si Addone:
                                       count(prev_tags tag) + 1
                 q(tag | prev_tags) = --------------------------
-                                       count(prev_tags) + V
+                                       count(prev_tags) + T
 
-                Donde V = |tagset| + 1 (Por el marcador </s>)
+                Donde T = |tagset| + 1 (Por el marcador </s>)
         """
         if self.addone:
             tags = prev_tags + (tag,)
