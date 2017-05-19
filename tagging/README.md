@@ -69,7 +69,7 @@ Se implemento el script *stats.py*, que se encarga de mostrar las siguientes est
 
 Ejercicio 2: Baseline Tagger
 ----------------------------
-Se implemento en el archivo *baseline.py* un "Etiquetador Baseline", el cual se encarga de etiquetar cada palabra con su etiqueta más frecuente observada en entrenamiento y a las palabras desconocidas, es decir, aquellas no vistas en el entrenamiento, las etiquetamos con **nc0s000**.
+Se implemento en el archivo *baseline.py* un "Etiquetador Baseline", el cual se encarga de etiquetar cada palabra con su etiqueta más frecuente observada en entrenamiento y a las palabras desconocidas, es decir, aquellas no vistas en el entrenamiento, las etiquetamos con la etiqueta **nc0s000**.
 
 
 Ejercicio 3: Entrenamiento y Evaluación de Taggers
@@ -82,7 +82,7 @@ Este script calcula lo siguiente:
 * Accuracy sobre todas las palabras.
 * Accuracy sobre las palabras conocidas.
 * Accuracy sobre las palabras desconocidas.
-* Matriz de confusión, esta muestra el porcentaje de que una palabra con tag *x* se haya etiquetado incorrectamente con tag *y*.
+* Matriz de confusión, esta muestra el porcentaje de que una palabra con tag *x* se haya etiquetado incorrectamente con el tag *y*.
 
 __**Nota:**__ *Accuracy* es el porcentaje de etiquetas correctas, es decir, la cantidad de aciertos del modelo de tagging sobre el tagging original.
 
@@ -110,132 +110,39 @@ __**Nota:**__ *Accuracy* es el porcentaje de etiquetas correctas, es decir, la c
 
 Ejercicio 4: Hidden Markov Models y Algoritmo de Viterbi
 --------------------------------------------------------
-Se implemento en el archivo *hmm.py* la clase *HMM* la cual es una implementacion de los Hidden Markov Model (modelo Generativo), cuyos parámetros son:
+Se implemento en el archivo *hmm.py* la clase *HMM* la cual es una implementación de los *Hidden Markov Model* (modelo Generativo), cuyos parámetros son:
 * Las probabilidades de transición entre estados (las etiquetas).
 * Las probabilidades de emisión de símbolos (las palabras).
 
 Este modelo se encarga de calcular la probabilidad de que una oración sea etiquetada con una secuencia de tags.  
-Para esto, utilizamos la supocición de Markov, la cual calcula lo siguiente:
+Para esto, utilizamos la suposición de Markov, la cual calcula lo siguiente:
 
 * Probabilidad de que ocurra un tag, dado que ocurrieron una cierta cantidad de tags previos.
 * Probabilidad de que ocurra una palabra dado un tag (es decir, la palabra observada emparejada con el tag).
 
-Tambien se implemento la clase *ViterbiTagger* la cual es una implementacion del Algoritmo de Viterbi el cual calcula el
+También se implemento la clase *ViterbiTagger* la cual es una implementación del Algoritmo de Viterbi el cual calcula el
 etiquetado más probable de una oración.
 
-Para las implentaciones se siguo las [Notas de Michael Collins].
+Para las implementaciones se siguió las [Notas de Michael Collins].
 
 
 Ejercicio 5: HMM POS Tagger
 ---------------------------
-Se implemento en el archivo *hmm.py* la clase *MLHMM* la cual es una implementacion de los Hidden Markov Model cuyos parámetros se estiman usando Maximum Likelihood sobre un corpus de oraciones etiquetado.  
+Se implemento en el archivo *hmm.py* la clase *MLHMM* la cual es una implementación de los *Hidden Markov Model* cuyos parámetros se estiman usando *Maximum Likelihood* sobre un corpus de oraciones etiquetado.  
 Estas estimaciones se hacen por medio de *counts* sobre el corpus de oraciones etiquetado.
 
-Para dicha implementación tambien se siguo las [Notas de Michael Collins].
+Para dicha implementación también se siguió las [Notas de Michael Collins].
 
-Tambien se le agrego al script *train.py*, la opcion de entrenar un "Maximum Likelihood Markov Model" de parametro *N* (Por los n-gramas).
+También se le agrego al script *train.py*, la opción de entrenar un modelo "Maximum Likelihood Markov Model" de parámetro *N* (Por los n-gramas).
 
-### Evaluación de un MLHMM con N = 1
-* Accuracy sobre todas las palabras = 85.84%
-* Accuracy sobre las palabras conocidas = 95.28%
-* Accuracy sobre las palabras desconocidas = 0.45%
+#### Comparación de la Accuracy de los distintos modelos entrenados con MLHMM, con su tiempo de evaluación
 
-#### Matriz de confusión para los 10 tags más frecuentes
-
-|         |  sp000  | nc0s000 | da0000  | aq0000  |   fc    | nc0p000 |   rg    | np00000 |   fp    |   cc    |
-|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|
-|  sp000  |  14.33  |    -    |    -    |    -    |    -    |    -    |  0.01   |    -    |    -    |    -    |
-| nc0s000 |  1.79   |  10.41  |    -    |  0.26   |    -    |    -    |  0.03   |    -    |    -    |    -    |
-| da0000  |  0.15   |    -    |  9.54   |    -    |    -    |    -    |    -    |    -    |    -    |    -    |
-| aq0000  |  1.82   |  0.22   |    -    |  4.83   |    -    |  0.14   |    -    |    -    |    -    |    -    |
-|   fc    |    -    |    -    |    -    |    -    |  5.85   |    -    |    -    |    -    |    -    |    -    |
-| nc0p000 |  1.24   |    -    |    -    |  0.18   |    -    |   4.1   |    -    |    -    |    -    |    -    |
-|   rg    |  0.32   |  0.02   |    -    |  0.03   |    -    |    -    |  3.28   |    -    |    -    |  0.02   |
-| np00000 |  2.04   |  0.01   |    -    |    -    |    -    |    -    |    -    |  1.52   |    -    |    -    |
-|   fp    |    -    |    -    |    -    |    -    |    -    |    -    |    -    |    -    |  3.55   |    -    |
-|   cc    |  0.01   |    -    |    -    |    -    |    -    |    -    |  0.05   |    -    |    -    |  3.34   |
-
-* Tiempo de evaluacion =  29.5 s
-
-
-### Evaluación de un MLHMM con N = 2
-* Accuracy sobre todas las palabras = 91.34%
-* Accuracy sobre las palabras conocidas = 97.63%
-* Accuracy sobre las palabras desconocidas = 34.33%
-
-#### Matriz de confusión para los 10 tags más frecuentes
-
-|         |  sp000  | nc0s000 | da0000  | aq0000  |   fc    | nc0p000 |   rg    | np00000 |   fp    |   cc    |
-|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|
-|  sp000  |  14.28  |    -    |  0.01   |    -    |    -    |    -    |  0.02   |    -    |    -    |    -    |
-| nc0s000 |  0.03   |  11.78  |  0.07   |  0.22   |  0.02   |  0.01   |  0.03   |   0.3   |    -    |    -    |
-| da0000  |    -    |  0.07   |  9.52   |    -    |    -    |    -    |    -    |  0.06   |    -    |    -    |
-| aq0000  |  0.11   |  0.37   |  0.11   |  5.84   |  0.14   |   0.1   |  0.06   |  0.17   |    -    |    -    |
-|   fc    |    -    |    -    |    -    |    -    |  5.85   |    -    |    -    |    -    |    -    |    -    |
-| nc0p000 |  0.02   |  0.68   |   0.1   |  0.13   |  0.03   |  4.22   |  0.02   |   0.2   |    -    |    -    |
-|   rg    |  0.06   |  0.03   |  0.03   |  0.06   |    -    |  0.01   |  3.35   |  0.07   |    -    |  0.02   |
-| np00000 |  0.03   |  0.42   |  0.04   |  0.15   |  0.05   |  0.01   |  0.05   |  2.51   |    -    |    -    |
-|   fp    |    -    |    -    |    -    |    -    |    -    |    -    |    -    |    -    |  3.55   |    -    |
-|   cc    |    -    |    -    |    -    |    -    |    -    |    -    |  0.05   |  0.01   |    -    |  3.34   |
-
-* Tiempo de evaluacion = 2 m 28 s
-
-
-### Evaluación de un MLHMM con N = 3
-* Accuracy sobre todas las palabras = 91.86%
-* Accuracy sobre las palabras conocidas = 97.65%
-* Accuracy sobre las palabras desconocidas = 39.49%
-
-#### Matriz de confusión para los 10 tags más frecuentes
-
-|         |  sp000  | nc0s000 | da0000  | aq0000  |   fc    | nc0p000 |   rg    | np00000 |   fp    |   cc    |
-|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|
-|  sp000  |  14.28  |    -    |  0.01   |    -    |    -    |    -    |  0.02   |    -    |    -    |    -    |
-| nc0s000 |  0.01   |  11.85  |  0.06   |  0.21   |  0.02   |  0.03   |  0.02   |  0.25   |    -    |    -    |
-| da0000  |    -    |  0.07   |  9.51   |  0.01   |    -    |    -    |    -    |  0.05   |    -    |    -    |
-| aq0000  |  0.09   |  0.32   |  0.07   |  6.09   |  0.09   |   0.1   |  0.07   |  0.11   |    -    |  0.01   |
-|   fc    |    -    |    -    |    -    |    -    |  5.85   |    -    |    -    |    -    |    -    |    -    |
-| nc0p000 |  0.02   |  0.66   |  0.09   |  0.14   |  0.01   |  4.33   |  0.03   |  0.16   |    -    |    -    |
-|   rg    |  0.06   |  0.03   |  0.03   |  0.06   |  0.01   |  0.01   |  3.39   |  0.03   |    -    |  0.03   |
-| np00000 |  0.02   |   0.4   |  0.04   |  0.15   |  0.03   |  0.02   |  0.07   |  2.55   |    -    |  0.01   |
-|   fp    |    -    |    -    |    -    |    -    |    -    |    -    |    -    |    -    |  3.55   |    -    |
-|   cc    |    -    |    -    |    -    |    -    |    -    |    -    |  0.06   |  0.01   |    -    |  3.33   |
-
-* Tiempo de evaluacion = 17 m 52 s
-
-
-### Evaluación de un MLHMM con N = 4
-* Accuracy sobre todas las palabras = 91.61%
-* Accuracy sobre las palabras conocidas = 97.31%
-* Accuracy sobre las palabras desconocidas = 40.02%
-
-#### Matriz de confusión para los 10 tags más frecuentes
-
-|         |  sp000  | nc0s000 | da0000  | aq0000  |   fc    | nc0p000 |   rg    | np00000 |   fp    |   cc    |
-|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|:-------:|
-|  sp000  |  14.29  |    -    |  0.01   |    -    |    -    |    -    |  0.02   |    -    |    -    |    -    |
-| nc0s000 |  0.02   |  11.85  |  0.07   |  0.22   |  0.01   |  0.07   |  0.03   |  0.21   |    -    |    -    |
-| da0000  |    -    |  0.07   |  9.51   |  0.01   |    -    |    -    |    -    |  0.05   |    -    |    -    |
-| aq0000  |  0.09   |  0.33   |  0.07   |  6.06   |  0.11   |  0.11   |  0.08   |   0.1   |    -    |  0.01   |
-|   fc    |    -    |    -    |    -    |    -    |  5.85   |    -    |    -    |    -    |    -    |    -    |
-| nc0p000 |  0.02   |  0.65   |  0.09   |  0.14   |  0.02   |  4.38   |  0.02   |  0.13   |    -    |    -    |
-|   rg    |  0.06   |  0.03   |  0.03   |  0.06   |    -    |  0.01   |  3.38   |  0.03   |    -    |  0.03   |
-| np00000 |  0.03   |  0.43   |  0.05   |  0.13   |  0.03   |  0.03   |  0.04   |  2.57   |    -    |  0.01   |
-|   fp    |    -    |    -    |    -    |    -    |    -    |    -    |    -    |    -    |  3.55   |    -    |
-|   cc    |    -    |    -    |    -    |    -    |    -    |    -    |  0.06   |  0.01   |    -    |  3.33   |
-
-* Tiempo de evaluacion = 2 h 19 m 57 s
-
-
-
-#### Comparacion de la Accuracy de los modelos entrenados con MLHMM, con su tiempo de evaluación
-
-| N |Accuracy todas las palabras|Accuracy palabras conocidas|Accuracy palabras desconocidas|Tiempo de evaluacion|
+| N |Accuracy todas las palabras|Accuracy palabras conocidas|Accuracy palabras desconocidas|Tiempo de evaluación|
 |:-:|:-------------------------:|:-------------------------:|:----------------------------:|:------------------:|
-| 1 |          85.84 %          |          95.28 %          |            0.45 %            |       29.5 s       |
-| 2 |          91.34 %          |          97.63 %          |           34.33 %            |      2 m 28 s      |
-| 3 |          91.86 %          |          97.65 %          |           39.49 %            |     17 m 52 s      |
-| 4 |          91.61 %          |          97.31 %          |           40.02 %            |   2 h 19 m 57 s    |
+| 1 |          85.84 %          |          95.28 %          |            0.45 %            |       16 seg       |
+| 2 |          91.34 %          |          97.63 %          |           34.33 %            |       40 seg       |
+| 3 |          91.86 %          |          97.65 %          |           39.49 %            |       4 min        |
+| 4 |          91.61 %          |          97.31 %          |           40.01 %            |   30 min 16 seg    |
 
 
 Ejercicio 6: Features para Etiquetado de Secuencias
@@ -257,8 +164,53 @@ Se implemento en el archivo *features.py* lo siguiente:
 
 Ejercicio 7: Maximum Entropy Markov Models
 ------------------------------------------
+Se implemento en el archivo *memm.py* la clase *MEMM* la cual es una implementación de *Maximum Entropy Markov Model*.  
+El cual usa:
+* Vectorizador [Link Vectorizador]
+* Distintos Clasificadores:
+    + LogisticRegression [Link LogisticRegression]
+    + MultinomialNB [Link MultinomialNB]
+    + LinearSVC [Link LinearSVC]
+
+Se implemento un algoritmo de tagging en el método *tag* usando *beam inference* con un *beam* de tamaño 1.  
+
+También se le agrego al script *train.py*, la opción de entrenar un modelo "Maximum Entropy Markov Model" de parámetro *N*.
+
+#### Comparación de la Accuracy de los distintos modelos entrenados con MEMM, con su tiempo de evaluación y usando distintos clasificadores
 
 
+##### Clasificador *"Logistic Regression"*
+
+| N |Accuracy todas las palabras|Accuracy palabras conocidas|Accuracy palabras desconocidas|Tiempo de evaluación|
+|:-:|:-------------------------:|:-------------------------:|:----------------------------:|:------------------:|
+| 1 |          91.10 %          |          94.55 %          |           59.84 %            |       26 seg       |
+| 2 |          90.70 %          |          94.17 %          |           59.31 %            |       28 seg       |
+| 3 |          90.87 %          |          94.24 %          |           60.42 %            |       29 seg       |
+| 4 |          90.88 %          |          94.23 %          |           60.49 %            |       31 seg       |
+
+
+##### Clasificador *"Multinomial NB"*
+
+| N |Accuracy todas las palabras|Accuracy palabras conocidas|Accuracy palabras desconocidas|Tiempo de evaluación|
+|:-:|:-------------------------:|:-------------------------:|:----------------------------:|:------------------:|
+| 1 |          77.02 %          |          81.47 %          |           36.72 %            |    39 min 8 seg    |
+| 2 |  |  |  |  |
+| 3 |  |  |  |  |
+| 4 |  |  |  |  |
+
+
+##### Clasificador *"Linear SVC"*
+
+| N |Accuracy todas las palabras|Accuracy palabras conocidas|Accuracy palabras desconocidas|Tiempo de evaluación|
+|:-:|:-------------------------:|:-------------------------:|:----------------------------:|:------------------:|
+| 1 |          93.59 %          |          97.11 %          |           61.74 %            |       25 seg       |
+| 2 |          93.55 %          |          97.04 %          |           61.98 %            |       28 seg       |
+| 3 |          93.68 %          |          97.10 %          |           62.73 %            |       30 seg       |
+| 4 |          93.69 %          |          97.13 %          |           62.54 %            |       31 seg       |
 
 
 [Notas de Michael Collins]: http://www.cs.columbia.edu/~mcollins/hmms-spring2013.pdf
+[Link Vectorizador]: http://feature-forge.readthedocs.io/en/latest/feature_evaluation.html
+[Link LogisticRegression]: http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+[Link MultinomialNB]: http://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.MultinomialNB.html
+[Link LinearSVC]: http://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC.html
