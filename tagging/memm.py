@@ -5,7 +5,7 @@ from featureforge.vectorizer import Vectorizer  # Vectorizador
 # sklearn.pipeline.Pipeline.html
 from sklearn.pipeline import Pipeline  # Pipeline
 
-from sklearn.svm import LinearSVC
+from sklearn.linear_model import LogisticRegression
 
 # --> Features <--
 from tagging.features import History
@@ -18,7 +18,7 @@ from tagging.features import NPrevTags, PrevWord
 
 class MEMM:
 
-    def __init__(self, n, tagged_sents, classifier=LinearSVC()):
+    def __init__(self, n, tagged_sents, classifier=LogisticRegression()):
         """
         n -- order of the model.
         tagged_sents -- list of sentences, each one being a list of pairs.
@@ -126,9 +126,9 @@ class MEMM:
 
         h -- the history.
         """
-        X = [h]  # Tiene que ser iterable
-        # self.pipeline.predict(X) --> me devuelve una lista de un elemento
-        return self.pipeline.predict(X)[0]
+        # [h] --> porque tiene que ser iterable
+        # self.pipeline.predict([h]) --> me devuelve una lista de un elemento
+        return self.pipeline.predict([h])[0]
 
     def tag(self, sent):
         """

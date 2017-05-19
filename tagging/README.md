@@ -194,9 +194,9 @@ También se le agrego al script *train.py*, la opción de entrenar un modelo "Ma
 | N |Accuracy todas las palabras|Accuracy palabras conocidas|Accuracy palabras desconocidas|Tiempo de evaluación|
 |:-:|:-------------------------:|:-------------------------:|:----------------------------:|:------------------:|
 | 1 |          77.02 %          |          81.47 %          |           36.72 %            |    39 min 8 seg    |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
+| 2 |          71.25 %          |          75.48 %          |           33.00 %            |    40 min 6 seg    |
+| 3 |          66.43 %          |          70.28 %          |           31.62 %            |    36 min 16 seg   |
+| 4 |          63.52 %          |          66.92 %          |           32.77 %            |    38 min 1 seg    |
 
 
 ##### Clasificador *"Linear SVC"*
