@@ -166,11 +166,11 @@ Ejercicio 7: Maximum Entropy Markov Models
 ------------------------------------------
 Se implemento en el archivo *memm.py* la clase *MEMM* la cual es una implementación de *Maximum Entropy Markov Model*.  
 El cual usa:
-* Vectorizador [Link Vectorizador]
+* [Vectorizador]
 * Distintos Clasificadores:
-    + LogisticRegression [Link LogisticRegression]
-    + MultinomialNB [Link MultinomialNB]
-    + LinearSVC [Link LinearSVC]
+    + [Logistic Regression]
+    + [Multinomial NB]
+    + [Linear SVC]
 
 Se implemento un algoritmo de tagging en el método *tag* usando *beam inference* con un *beam* de tamaño 1.  
 
@@ -186,7 +186,7 @@ También se le agrego al script *train.py*, la opción de entrenar un modelo "Ma
 | 1 |          91.10 %          |          94.55 %          |           59.84 %            |       26 seg       |
 | 2 |          90.70 %          |          94.17 %          |           59.31 %            |       28 seg       |
 | 3 |          90.87 %          |          94.24 %          |           60.42 %            |       29 seg       |
-| 4 |          90.88 %          |          94.23 %          |           60.49 %            |       31 seg       |
+| 4 |          90.88 %          |          94.23 %          |           60.48 %            |       31 seg       |
 
 
 ##### Clasificador *"Multinomial NB"*
@@ -210,7 +210,7 @@ También se le agrego al script *train.py*, la opción de entrenar un modelo "Ma
 
 
 [Notas de Michael Collins]: http://www.cs.columbia.edu/~mcollins/hmms-spring2013.pdf
-[Link Vectorizador]: http://feature-forge.readthedocs.io/en/latest/feature_evaluation.html
-[Link LogisticRegression]: http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
-[Link MultinomialNB]: http://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.MultinomialNB.html
-[Link LinearSVC]: http://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC.html
+[Vectorizador]: http://feature-forge.readthedocs.io/en/latest/feature_evaluation.html
+[Logistic Regression]: http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+[Multinomial NB]: http://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.MultinomialNB.html
+[Linear SVC]: http://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC.html

@@ -25,20 +25,10 @@ from tagging.baseline import BaselineTagger
 from tagging.hmm import MLHMM
 from tagging.memm import MEMM
 
-from sklearn.linear_model import LogisticRegression
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.svm import LinearSVC
-
 models = {
     "base": BaselineTagger,
     "mlhmm": MLHMM,
     "memm": MEMM
-}
-
-classifier = {
-    "logreg": LogisticRegression(),
-    "multi": MultinomialNB(),
-    "svc": LinearSVC()
 }
 
 
@@ -69,8 +59,7 @@ if __name__ == '__main__':
         else:
             print("##### MEMM ##### Classifier: Linear SVC")
         print("Training Model ...")
-        clf = classifier.get(c, LinearSVC())
-        model = models[m](n, sents, clf)
+        model = models[m](n, sents, c)
     else:
         print("##### Baseline Tagger #####")
         print("Training Model ...")

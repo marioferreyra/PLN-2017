@@ -5,7 +5,10 @@ from featureforge.vectorizer import Vectorizer  # Vectorizador
 # sklearn.pipeline.Pipeline.html
 from sklearn.pipeline import Pipeline  # Pipeline
 
+# Clasificadores
 from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.svm import LinearSVC
 
 # --> Features <--
 from tagging.features import History
@@ -18,7 +21,7 @@ from tagging.features import NPrevTags, PrevWord
 
 class MEMM:
 
-    def __init__(self, n, tagged_sents, classifier=LogisticRegression()):
+    def __init__(self, n, tagged_sents, name_classifier="svc"):
         """
         n -- order of the model.
         tagged_sents -- list of sentences, each one being a list of pairs.
@@ -40,7 +43,7 @@ class MEMM:
         features = basic_features + parametric_features
 
         v = Vectorizer(features)  # Se instancia con una lista de features
-        c = classifier  # Clasificador
+        c = self.selectClassifier(name_classifier)  # Clasificador
         pipe = Pipeline([("vectorizador", v), ("clasificador", c)])
 
         # Datos de entrenamiento (training_data)
@@ -52,6 +55,21 @@ class MEMM:
 
         pipe.fit(histories, tags)
         self.pipeline = pipe
+
+    def selectClassifier(self, name_classifier):
+        """
+        Dado un nombre de un clasificador, retorna una instanciacion del
+        clasificador.
+
+        name_classifier -- nombre del clasificador
+        """
+        classifier = LinearSVC()
+        if name_classifier == "logreg":
+            classifier = LogisticRegression()
+        elif name_classifier == "multi":
+            classifier = MultinomialNB()
+
+        return classifier
 
     def unknown(self, w):
         """
