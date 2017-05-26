@@ -75,17 +75,45 @@ class CKYParser:
             x_i = (sent[i-1],)
             for X, q in productions_check[x_i].items():
                 pi[(i, i)][X] = log2Extended(q)
-                bp[(i, i)][X] = Tree(X, [x_i])
+                bp[(i, i)][X] = Tree(X, list(x_i))
 
         # pprint.pprint(pi)
         # pprint.pprint(bp)
 
         # Algoritmo
         for l in range(1, n):  # [1 ... n-1]
+            # print("L =", l)
             for i in range(1, n-l+1):  # [1 ... n-l]
+                # print("    I =", i)
                 j = i + l
-                
+                # print("        J =", j)
+                for s in range(i, j):  # [i ... j-1]
+                    # print("            S =", s)
+                    for Y, prob_Y in pi[(i, s)].items():
+                        # print("            Y, prob_Y =", Y, prob_Y)
+                        for Z, prob_Z in pi[(s+1, j)].items():
+                            # print("            Z, prob_Z =", Z, prob_Z)
+                            if (Y, Z) in productions_check.keys():
+                                # print("     ",Y, Z)
+                                max_log_prob = float("-inf")
+                                for X, q_X_YZ in productions_check[(Y, Z)].items():
+                                    new_log_prob = log2Extended(q_X_YZ)
+                                    new_log_prob += prob_Y
+                                    new_log_prob += prob_Z
+                                    # print("            X, prob_X_YZ =", X, q_X_YZ)
+                                    # print("            new_log_prob =", new_log_prob)
+                                    # Al parecer hasta aca todo esta bien
+                                    if max_log_prob < new_log_prob:
+                                        max_log_prob = new_log_prob
 
+                                pi[(i, j)][X] = max_log_prob
+                                
+
+
+        pprint.pprint(pi)
+        # pprint.pprint(bp)
+
+        return pi, bp
 
 
 # PARA TEST
@@ -108,4 +136,4 @@ cky = CKYParser(grammar)
 
 sent = ['el', 'gato', 'come', 'pescado', 'crudo']
 
-cky.parse(sent)
+pi, bp = cky.parse(sent)
