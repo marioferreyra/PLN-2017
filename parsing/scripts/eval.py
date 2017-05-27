@@ -1,11 +1,14 @@
-"""Evaulate a parser.
+"""
+Evaluate a parser.
 
 Usage:
-  eval.py -i <file>
+  eval.py -i <file> [-m <m>] [-n <n>]
   eval.py -h | --help
 
 Options:
   -i <file>     Parsing model file.
+  -m <m>        Parse only sentences of length <= <m>.
+  -n <n>        Parse only <n> sentences (useful for profiling).
   -h --help     Show this screen.
 """
 from docopt import docopt
@@ -18,7 +21,9 @@ from parsing.util import spans
 
 
 def progress(msg, width=None):
-    """Ouput the progress of something on the same line."""
+    """
+    Ouput the progress of something on the same line.
+    """
     if not width:
         width = len(msg)
     print('\b' * width + msg, end='')
@@ -35,8 +40,9 @@ if __name__ == '__main__':
     f.close()
 
     print('Loading corpus...')
+    PATH = "/home/mario/Escritorio/ancora-3.0.1es"
     files = '3LB-CAST/.*\.tbf\.xml'
-    corpus = SimpleAncoraCorpusReader('ancora/ancora-2.0/', files)
+    corpus = SimpleAncoraCorpusReader(PATH, files)
     parsed_sents = list(corpus.parsed_sents())
 
     print('Parsing...')

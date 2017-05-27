@@ -1,4 +1,5 @@
-"""Train a parser.
+"""
+Train a parser.
 
 Usage:
   train.py [-m <model>] -o <file>
@@ -17,6 +18,7 @@ import pickle
 
 from corpus.ancora import SimpleAncoraCorpusReader
 
+# from parsing.baselines import Flat, RBranch
 from parsing.baselines import Flat, RBranch, LBranch
 
 
@@ -31,8 +33,9 @@ if __name__ == '__main__':
     opts = docopt(__doc__)
 
     print('Loading corpus...')
+    PATH = "/home/mario/Escritorio/ancora-3.0.1es"
     files = 'CESS-CAST-(A|AA|P)/.*\.tbf\.xml'
-    corpus = SimpleAncoraCorpusReader('ancora/ancora-2.0/', files)
+    corpus = SimpleAncoraCorpusReader(PATH, files)
 
     print('Training model...')
     model = models[opts['-m']](corpus.parsed_sents())
