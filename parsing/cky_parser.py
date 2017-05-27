@@ -66,74 +66,68 @@ class CKYParser:
                        #         0    1    2   ...   n-1
 
         # { (i, j) : {"Non-terminal" : prob} }
-        self._pi = pi = defaultdict(lambda: defaultdict())
+        self._pi = pi = {}
         # { (i, j) : {"Non-terminal" : Tree.fromstring(...)} }
-        self._bp = bp = defaultdict(lambda: defaultdict())
+        self._bp = bp = {}
 
         # Inicializacion
         for i in range(1, n+1):  # [1 ... n]
-            x_i = (sent[i-1],)
-            for X, q in productions_check[x_i].items():
-                pi[(i, i)][X] = log2Extended(q)
-                bp[(i, i)][X] = Tree(X, list(x_i))
+            x_i = sent[i-1]
+            pi[i, i] = defaultdict()
+            bp[i, i] = defaultdict()
+            for X, q in productions_check[(x_i,)].items():
+                pi[i, i][X] = log2Extended(q)
+                bp[i, i][X] = Tree(X, [x_i])
 
         # pprint.pprint(pi)
         # pprint.pprint(bp)
 
         # Algoritmo
         for l in range(1, n):  # [1 ... n-1]
-            # print("L =", l)
             for i in range(1, n-l+1):  # [1 ... n-l]
-                # print("    I =", i)
                 j = i + l
-                # print("        J =", j)
+                pi[i, j] = defaultdict()
+                bp[i, j] = defaultdict()
                 for s in range(i, j):  # [i ... j-1]
-                    # print("            S =", s)
-                    for Y, prob_Y in pi[(i, s)].items():
-                        # print("            Y, prob_Y =", Y, prob_Y)
-                        for Z, prob_Z in pi[(s+1, j)].items():
-                            # print("            Z, prob_Z =", Z, prob_Z)
+                    for Y, prob_Y in pi[i, s].items():
+                        for Z, prob_Z in pi[s+1, j].items():
                             if (Y, Z) in productions_check.keys():
-                                # print("     ",Y, Z)
                                 max_log_prob = float("-inf")
-                                for X, q_X_YZ in productions_check[(Y, Z)].items():
+                                for X, q_X_YZ in productions_check[Y, Z].items():
                                     new_log_prob = log2Extended(q_X_YZ)
                                     new_log_prob += prob_Y
                                     new_log_prob += prob_Z
-                                    # print("            X, prob_X_YZ =", X, q_X_YZ)
-                                    # print("            new_log_prob =", new_log_prob)
-                                    # Al parecer hasta aca todo esta bien
+
                                     if max_log_prob < new_log_prob:
                                         max_log_prob = new_log_prob
 
-                                pi[(i, j)][X] = max_log_prob
-                                
+                                pi[i, j][X] = max_log_prob
+                                t1 = bp[i, s][Y]
+                                t2 = bp[s+1, j][Z]
+                                bp[i, j][X] = Tree(X, [t1, t2])
+
+        # Output
+        return pi[1, n].get("S", float("-inf")), bp[1, n].get("S", None)
 
 
-        pprint.pprint(pi)
-        # pprint.pprint(bp)
+# # PARA TEST
+# from nltk.grammar import PCFG
 
-        return pi, bp
+# grammar = PCFG.fromstring(
+#             """
+#                 S -> NP VP              [1.0]
+#                 NP -> Det Noun          [0.6]
+#                 NP -> Noun Adj          [0.4]
+#                 VP -> Verb NP           [1.0]
+#                 Det -> 'el'             [1.0]
+#                 Noun -> 'gato'          [0.9]
+#                 Noun -> 'pescado'       [0.1]
+#                 Verb -> 'come'          [1.0]
+#                 Adj -> 'crudo'          [1.0]
+#             """)
 
+# cky = CKYParser(grammar)
 
-# PARA TEST
-from nltk.grammar import PCFG
+# sent = ['el', 'gato', 'come', 'pescado', 'crudo']
 
-grammar = PCFG.fromstring(
-            """
-                S -> NP VP              [1.0]
-                NP -> Det Noun          [0.6]
-                NP -> Noun Adj          [0.4]
-                VP -> Verb NP           [1.0]
-                Det -> 'el'             [1.0]
-                Noun -> 'gato'          [0.9]
-                Noun -> 'pescado'       [0.1]
-                Verb -> 'come'          [1.0]
-                Adj -> 'crudo'          [1.0]
-            """)
-
-cky = CKYParser(grammar)
-
-sent = ['el', 'gato', 'come', 'pescado', 'crudo']
-
-pi, bp = cky.parse(sent)
+# pi, bp = cky.parse(sent)

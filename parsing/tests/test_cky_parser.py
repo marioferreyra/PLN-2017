@@ -53,9 +53,11 @@ class TestCKYParser(TestCase):
                      log2(0.6 * 1.0 * 0.9) +  # left part
                      log2(1.0) + log2(1.0) + log2(0.4 * 0.1 * 1.0)},  # right part
         }
+
+        # import pdb;pdb.set_trace()
         self.assertEqualPi(parser._pi, pi)
 
-        # check partial results
+        # # check partial results
         bp = {
             (1, 1): {'Det': Tree.fromstring("(Det el)")},
             (2, 2): {'Noun': Tree.fromstring("(Noun gato)")},
@@ -109,3 +111,40 @@ class TestCKYParser(TestCase):
                 prob1 = d1[k2]
                 prob2 = d2[k2]
                 self.assertAlmostEqual(prob1, prob2)
+
+    def test_parse_ambiguity(self):
+        # Ejemplo tomado de las paginas 4, 5, 8 de las notas de Michael Collins
+        # Probabilistic Context-Free Grammars (PCFGs)
+        grammar = PCFG.fromstring(
+            """
+                S -> NP VP              [1.0]
+
+                VP -> Vi                [0.3]
+                VP -> Vt NP             [0.5]
+                VP -> VP PP             [0.2]
+
+                NP -> DT NN             [0.8]
+                NP -> NP PP             [0.2]
+
+                PP -> IN NP             [1.0]
+
+                Vi -> sleeps            [1.0]
+
+                Vt -> saw               [1.0]
+
+                NN -> man               [0.1]
+                NN -> woman             [0.1]
+                NN -> telescope         [0.3]
+                NN -> dog               [0.5]
+
+                DT -> the               [1.0]
+
+                IN -> with              [0.6]
+                IN -> in                [0.4]   
+            """)
+
+        parser = CKYParser(grammar)
+
+        lp, t = parser.parse('the man saw the dog with the telescope'.split())
+
+        t.pretty_print(unicodelines=True, nodedist=4)
