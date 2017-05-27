@@ -18,7 +18,6 @@ import pickle
 
 from corpus.ancora import SimpleAncoraCorpusReader
 
-# from parsing.baselines import Flat, RBranch
 from parsing.baselines import Flat, RBranch, LBranch
 
 
@@ -32,15 +31,15 @@ models = {
 if __name__ == '__main__':
     opts = docopt(__doc__)
 
-    print('Loading corpus...')
+    print('Loading corpus ...')
     PATH = "/home/mario/Escritorio/ancora-3.0.1es"
     files = 'CESS-CAST-(A|AA|P)/.*\.tbf\.xml'
     corpus = SimpleAncoraCorpusReader(PATH, files)
 
-    print('Training model...')
+    print('Training model ...')
     model = models[opts['-m']](corpus.parsed_sents())
 
-    print('Saving...')
+    print('Saving ...')
     filename = opts['-o']
     f = open(filename, 'wb')
     pickle.dump(model, f)

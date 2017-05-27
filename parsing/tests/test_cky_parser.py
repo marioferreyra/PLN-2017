@@ -119,28 +119,23 @@ class TestCKYParser(TestCase):
             """
                 S -> NP VP              [1.0]
 
-                VP -> Vi                [0.3]
-                VP -> Vt NP             [0.5]
-                VP -> VP PP             [0.2]
+                VP -> Vt NP             [0.65]
+                VP -> VP PP             [0.35]
 
                 NP -> DT NN             [0.8]
                 NP -> NP PP             [0.2]
 
                 PP -> IN NP             [1.0]
 
-                Vi -> sleeps            [1.0]
-
                 Vt -> saw               [1.0]
 
-                NN -> man               [0.1]
-                NN -> woman             [0.1]
+                NN -> man               [0.2]
                 NN -> telescope         [0.3]
                 NN -> dog               [0.5]
 
                 DT -> the               [1.0]
 
-                IN -> with              [0.6]
-                IN -> in                [0.4]   
+                IN -> with              [1.0]
             """)
 
         parser = CKYParser(grammar)
