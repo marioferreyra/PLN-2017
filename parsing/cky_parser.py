@@ -34,20 +34,29 @@ class CKYParser:
         """
         grammar -- a binarised NLTK PCFG.
         """
+        # type(grammar) = nltk.grammar.PCFG
         self.grammar = grammar
-        # Ej: {Noun : {(pescado,) : 0.1, (gato,) : 0.9}}
+
+        # Ej: { Noun : { (pescado,) : 0.1, (gato,) : 0.9 } }
         self.productions = defaultdict(lambda: defaultdict(float))
+
         # Ej: { (pescado,) :  {'Noun': 0.1} }
         #     { (gato,) : {'Noun': 0.9} }
-
         self.productions_check = defaultdict(lambda: defaultdict(float))
+
         for prod in self.grammar.productions():
-            # nt: non-terminal
-            left_hand_side = lhs = str(prod.lhs())  # type(prod.lhs()) = nt
+            # type(prod): <class 'nltk.grammar.ProbabilisticProduction'>
+            # type(prod.lhs): <class 'nltk.grammar.Nonterminal'>
+            # type(prod.rhs): <class 'tuple'>
+            #   Cada elemento de prod.rhs() es del tipo:
+            #       <class 'nltk.grammar.Nonterminal'>
+            # type(prod.prob()): <class 'float'>
+            left_hand_side = lhs = str(prod.lhs())
+            # prod.rhs() es una tupla de non-terminals => Las pasamos a str
+            # porque las palabras son str, para su posterior check.
             right_hand_side = rhs = tuple([str(nt) for nt in prod.rhs()])
             probability = prod.prob()
 
-            # self.productions[left_hand_side][right_hand_side] = probability
             self.productions[lhs][rhs] = probability
             self.productions_check[rhs][lhs] = probability
 
