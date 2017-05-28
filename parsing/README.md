@@ -87,8 +87,19 @@ Se agrego a los tests un test con una gramática y una oración tal que la oraci
 | IN -> in        |     0.4      |
 
 
+<!-- Terminar bien la parte de la ambiguedad -->
+<!-- Tanto en el test como en el README -->
+
 Ejercicio 3: PCFGs No Lexicalizadas
 -----------------------------------
+__**Notacion:**__
+* UPCFG: Unlexicalized Probabilistic Context-Free Grammars.
+* PCFG: Probabilistic Context-Free Grammars.
+* Deslexicalizar PCFG: En las reglas, reemplazar todas las entradas léxicas por su POS tag.
+
+Se implemento una UPCFG, es decir una PCFG cuyas reglas y probabilidades se obtienen a partir de un corpus de entrenamiento y luego se deslexicaliza completamente la PCFG.  
+Luego para parsear una oracion taggeada, nuestro parser utiliza el algoritmo de CKY (anteriormente implementado), utilizando la oración de POS tags para parsear e ignorando las entradas léxicas.
+
 
 
 Ejercicio 4: Markovización Horizontal

@@ -2,8 +2,9 @@
 # http://www.nltk.org/_modules/nltk/tree.html
 from collections import defaultdict
 from nltk.tree import Tree
-from nltk.grammar import Nonterminal, ProbabilisticProduction
+from nltk.grammar import Nonterminal, ProbabilisticProduction, PCFG
 from parsing.util import unlexicalize, lexicalize
+from parsing.cky_parser import CKYParser
 
 import pprint
 
@@ -35,6 +36,7 @@ class UPCFG:
         # {A -> B : count(A -> B) / count(A)}
         probability_ML = defaultdict(float)
 
+        self.start = start # Para la gramatica del parser CKY
         self.prods = [] # Lista de producciones
 
         # Hacemos una copia de t porque al hacer el unlexicalize, este me
@@ -81,7 +83,20 @@ class UPCFG:
 
         tagged_sent -- the tagged sentence (a list of pairs (word, tag)).
         """
-        pass
+        words, tags = zip(*tagged_sent)
+
+        # type(PCFG(...)) = <class 'nltk.grammar.PCFG'>
+        # PCFG(start, productions)
+        #       type(start): Nonterminal
+        #       type(productions): list(Production)
+        grammar = PCFG(Nonterminal(self.start), self.prods)
+        my_parser = CKYParser(grammar)
+
+        log_probability, tree = my_parser.parse(tags)
+
+        return lexicalize(tree, words)
+
+
 
 
 
@@ -96,4 +111,12 @@ class UPCFG:
 
 # t2 = t.copy(deep=True)
 
+# tagged_sent = [('el', 'Det'), ('gato', 'Noun'), ('come', 'Verb'), ('pescado', 'Noun'), ('crudo', 'Adj')]
 # model = UPCFG([t])
+
+# tree = model.parse(tagged_sent)
+
+# print("Mi arbol")
+# pprint.pprint(tree)
+# print("")
+# tree.pretty_print(unicodelines=True, nodedist=4)
