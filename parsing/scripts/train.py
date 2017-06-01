@@ -10,6 +10,7 @@ Options:
                   flat: Flat trees
                   rbranch: Right branching trees
                   lbranch: Left branching trees
+                  upcfg: Unlexicalized Probabilistic Context-Free Grammar trees
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
@@ -19,12 +20,14 @@ import pickle
 from corpus.ancora import SimpleAncoraCorpusReader
 
 from parsing.baselines import Flat, RBranch, LBranch
+from parsing.upcfg import UPCFG
 
 
 models = {
     'flat': Flat,
     'rbranch': RBranch,
     'lbranch': LBranch,
+    'upcfg': UPCFG
 }
 
 
@@ -37,7 +40,10 @@ if __name__ == '__main__':
     corpus = SimpleAncoraCorpusReader(PATH, files)
 
     print('Training model ...')
+    # x = list(corpus.parsed_sents())[:10]
     model = models[opts['-m']](corpus.parsed_sents())
+    # x = corpus.parsed_sents()
+    # model = models[opts['-m']](x)
 
     print('Saving ...')
     filename = opts['-o']

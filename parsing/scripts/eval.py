@@ -2,13 +2,13 @@
 Evaluate a parser.
 
 Usage:
-  eval.py -i <file> [-m <m>] [-n <n>]
+  eval.py [-m <m>] [-n <n>] -i <file>
   eval.py -h | --help
 
 Options:
-  -i <file>     Parsing model file.
   -m <m>        Parse only sentences of length <= <m>.
   -n <n>        Parse only <n> sentences (useful for profiling).
+  -i <file>     Parsing model file.
   -h --help     Show this screen.
 """
 from docopt import docopt
@@ -48,6 +48,9 @@ def f1(precision, recall):
     """
     Calcula F1.
     """
+    # if precision == 0 or recall == 0:
+    #     return 0
+    # else:
     return (2*precision*recall) / (precision + recall)
 
 
@@ -91,9 +94,8 @@ if __name__ == '__main__':
 
     n = len(parsed_sents)
 
-    format_str = '{:3.1f}% ({}/{}) (Labeled_P={:2.2f}%, Labeled_R={:2.2f}%,\
-Labeled_F1={:2.2f}%) (Unlabeled_P={:2.2f}%, Unlabeled_R={:2.2f}%,\
-Unlabeled_F1={:2.2f}%)'
+    format_str = '{:3.1f}% ({}/{}) | Labeled: (P={:2.2f}%, R={:2.2f}%, \
+F1={:2.2f}%) | Unlabeled: (P={:2.2f}%, R={:2.2f}%, F1={:2.2f}%)'
     progress(format_str.format(0.0, 0, n, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
 
     for i, gold_parsed_sent in enumerate(parsed_sents):
