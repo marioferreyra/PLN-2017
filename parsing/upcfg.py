@@ -5,19 +5,6 @@ from nltk.tree import Tree
 from nltk.grammar import Nonterminal, ProbabilisticProduction, PCFG
 from parsing.util import unlexicalize, lexicalize
 from parsing.cky_parser import CKYParser
-from parsing.baselines import Flat
-import pprint
-
-# ENUNCIADO
-# Implementar una UPCFG, una PCFG cuyas reglas y probabilidades se obtienen a
-# partir de un corpus de entrenamiento.
-
-# Deslexicalizar completamente la PCFG: en las reglas, reemplazar todas las
-# entradas léxicas por su POS tag. Luego, el parser también debe ignorar las
-# entradas léxicas y usar la oración de POS tags para parsear.
-
-# Entrenar y evaluar la UPCFG para todas las oraciones de largo menor o igual a 20.
-# Reportar resultados y tiempos de evaluación en el README.
 
 
 class UPCFG:
@@ -25,20 +12,19 @@ class UPCFG:
     Unlexicalized PCFG.
     """
 
-    def __init__(self, parsed_sents, start='sentence'):
+    def __init__(self, parsed_sents, start='sentence', horzMarkov=None):
         """
         parsed_sents -- list of training trees.
         """
         # { A -> B : count(A -> B) }
-        productions_counts = productions_counts = defaultdict(int)
+        productions_counts = defaultdict(int)
         # { A : count(A) }
-        left_hand_side_count = lhs_count = defaultdict(int)
+        lhs_count = defaultdict(int)  # left_hand_side_count
         # {A -> B : count(A -> B) / count(A)}
         probability_ML = defaultdict(float)
 
-        self.start = start # Para la gramatica del parser CKY
-        self.prods = [] # Lista de producciones
-        self.parsed_sents = parsed_sents
+        self.start = start  # Para la gramatica del parser CKY
+        self.prods = []  # Lista de producciones
 
         # Hacemos una copia de t porque al hacer el unlexicalize, este me
         # modifica el arbol
@@ -46,6 +32,8 @@ class UPCFG:
         unlex_sents = [unlexicalize(t.copy(deep=True)) for t in parsed_sents]
 
         for t in unlex_sents:
+            t.chomsky_normal_form(horzMarkov=horzMarkov)
+            t.collapse_unary()
             for prod in t.productions():
                 # type(prod): <class 'nltk.grammar.Production'>
                 # type(prod.lhs): <class 'nltk.grammar.Nonterminal'>
@@ -95,35 +83,12 @@ class UPCFG:
 
         log_probability, tree = my_parser.parse(tags)
 
-        # No se puedo parsear con CKY, entonces devolvemos el Flat
+        # Si no se puede parsear con CKY, entonces devolvemos el Flat
         if tree is None:
-            flat_tree = Flat(self.parsed_sents, start=self.start)
+            new_tree = Tree(self.start, [Tree(t, [w]) for w, t in tagged_sent])
 
-            return flat_tree.parse(tagged_sent)
+            return new_tree
+
+        tree.un_chomsky_normal_form()
 
         return lexicalize(tree, words)
-
-
-
-
-
-
-# t = Tree.fromstring(
-#             """
-#                 (S
-#                     (NP (Det el) (Noun gato))
-#                     (VP (Verb come) (NP (Noun pescado) (Adj crudo)))
-#                 )
-#             """)
-
-# t2 = t.copy(deep=True)
-
-# tagged_sent = [('el', 'Det'), ('gato', 'Noun'), ('come', 'Verb'), ('pescado', 'Noun'), ('crudo', 'Adj')]
-# model = UPCFG([t])
-
-# tree = model.parse(tagged_sent)
-
-# print("Mi arbol")
-# pprint.pprint(tree)
-# print("")
-# tree.pretty_print(unicodelines=True, nodedist=4)
