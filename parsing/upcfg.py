@@ -5,7 +5,7 @@ from nltk.tree import Tree
 from nltk.grammar import Nonterminal, ProbabilisticProduction, PCFG
 from parsing.util import unlexicalize, lexicalize
 from parsing.cky_parser import CKYParser
-
+from parsing.baselines import Flat
 import pprint
 
 # ENUNCIADO
@@ -38,6 +38,7 @@ class UPCFG:
 
         self.start = start # Para la gramatica del parser CKY
         self.prods = [] # Lista de producciones
+        self.parsed_sents = parsed_sents
 
         # Hacemos una copia de t porque al hacer el unlexicalize, este me
         # modifica el arbol
@@ -93,6 +94,12 @@ class UPCFG:
         my_parser = CKYParser(grammar)
 
         log_probability, tree = my_parser.parse(tags)
+
+        # No se puedo parsear con CKY, entonces devolvemos el Flat
+        if tree is None:
+            flat_tree = Flat(self.parsed_sents, start=self.start)
+
+            return flat_tree.parse(tagged_sent)
 
         return lexicalize(tree, words)
 
