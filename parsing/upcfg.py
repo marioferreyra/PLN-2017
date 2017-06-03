@@ -33,7 +33,7 @@ class UPCFG:
 
         for t in unlex_sents:
             t.chomsky_normal_form(horzMarkov=horzMarkov)
-            t.collapse_unary()
+            t.collapse_unary(collapsePOS=True, collapseRoot=True)
             for prod in t.productions():
                 # type(prod): <class 'nltk.grammar.Production'>
                 # type(prod.lhs): <class 'nltk.grammar.Nonterminal'>
@@ -60,6 +60,13 @@ class UPCFG:
             # Cada elemento de self.prods es del tipo:
             #     <class 'nltk.grammar.ProbabilisticProduction'>
 
+        # type(PCFG(...)) = <class 'nltk.grammar.PCFG'>
+        # PCFG(start, productions)
+        #       type(start): Nonterminal
+        #       type(productions): list(Production)
+        grammar = PCFG(Nonterminal(start), self.prods)
+        self.my_parser = CKYParser(grammar)
+
     def productions(self):
         """
         Returns the list of UPCFG probabilistic productions.
@@ -74,20 +81,11 @@ class UPCFG:
         """
         words, tags = zip(*tagged_sent)
 
-        # type(PCFG(...)) = <class 'nltk.grammar.PCFG'>
-        # PCFG(start, productions)
-        #       type(start): Nonterminal
-        #       type(productions): list(Production)
-        grammar = PCFG(Nonterminal(self.start), self.prods)
-        my_parser = CKYParser(grammar)
-
-        log_probability, tree = my_parser.parse(tags)
+        log_probability, tree = self.my_parser.parse(tags)
 
         # Si no se puede parsear con CKY, entonces devolvemos el Flat
         if tree is None:
-            new_tree = Tree(self.start, [Tree(t, [w]) for w, t in tagged_sent])
-
-            return new_tree
+            return Tree(self.start, [Tree(t, [w]) for w, t in tagged_sent])
 
         tree.un_chomsky_normal_form()
 
