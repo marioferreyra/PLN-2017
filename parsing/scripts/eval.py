@@ -127,12 +127,12 @@ F1={:2.2f}%) | Unlabeled: (P={:2.2f}%, R={:2.2f}%, F1={:2.2f}%)'
 
         # Compute labeled partial results
         labeled_prec = precision(labeled_hits, total_model)
-        labeled_rec = precision(labeled_hits, total_gold)
+        labeled_rec = recall(labeled_hits, total_gold)
         labeled_f1 = f1(labeled_prec, labeled_rec)
 
         # Compute labeled partial results
         unlabeled_prec = precision(unlabeled_hits, total_model)
-        unlabeled_rec = precision(unlabeled_hits, total_gold)
+        unlabeled_rec = recall(unlabeled_hits, total_gold)
         unlabeled_f1 = f1(unlabeled_prec, unlabeled_rec)
 
         progress(format_str.format(float(i+1)*100 / n,
