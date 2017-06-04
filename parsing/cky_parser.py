@@ -60,6 +60,9 @@ class CKYParser:
             self.productions[lhs][rhs] = probability
             self.productions_check[rhs][lhs] = probability
 
+        self.productions = dict(self.productions)
+        self.productions_check = dict(self.productions_check)
+
         # pprint.pprint(self.productions)
         # pprint.pprint(self.productions_check)
 
