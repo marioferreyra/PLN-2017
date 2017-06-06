@@ -15,39 +15,29 @@ Los resultados fueron los siguientes:
 * Cantidad de oraciones de largo menor o igual a 20 = 1444
 
 ### Parser Flat
-##### Labeled
-* Precision = 99.93%
-* Recall = 14.58%
-* F1 = 25.44%
 
-##### Unlabeled
-* Precision = 100.00%
-* Recall = 14.59%
-* F1 = 25.46%
+|           | Labeled | Unlabeled |
+|:---------:|:-------:|:---------:|
+| Precision | 99.93 % | 100.00 %  |
+|  Recall   | 14.58 % |  14.59 %  |
+|    F1     | 25.44 % |  25.46 %  |
 
 
 ### Parser Lbranch
-##### Labeled
-* Precision = 8.81%
-* Recall = 14.58%
-* F1 = 10.98%
 
-##### Unlabeled
-* Precision = 14.71%
-* Recall = 24.35%
-* F1 = 18.34%
-
+|           | Labeled | Unlabeled |
+|:---------:|:-------:|:---------:|
+| Precision | 8.81 %  |  14.71 %  |
+|  Recall   | 14.58 % |  24.35 %  |
+|    F1     | 10.98 % |  18.34 %  |
 
 ### Parser Rbranch
-##### Labeled
-* Precision = 8.81%
-* Recall = 14.58%
-* F1 = 10.98%
 
-##### Unlabeled
-* Precision = 8.88%
-* Recall = 14.69%
-* F1 = 11.07%
+|           | Labeled | Unlabeled |
+|:---------:|:-------:|:---------:|
+| Precision | 8.81 %  |  8.88 %   |
+|  Recall   | 14.58 % |  14.69 %  |
+|    F1     | 10.98 % |  11.07 %  |
 
 
 Ejercicio 2: Algoritmo CKY
