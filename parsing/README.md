@@ -14,7 +14,7 @@ Los resultados fueron los siguientes:
 
 * Cantidad de oraciones de largo menor o igual a 20 = 1444
 
-### Parser Flat
+#### Parser Flat
 
 |           | Labeled | Unlabeled |
 |:---------:|:-------:|:---------:|
@@ -23,7 +23,7 @@ Los resultados fueron los siguientes:
 |    F1     | 25.44 % |  25.46 %  |
 
 
-### Parser Lbranch
+#### Parser Lbranch
 
 |           | Labeled | Unlabeled |
 |:---------:|:-------:|:---------:|
@@ -31,7 +31,7 @@ Los resultados fueron los siguientes:
 |  Recall   | 14.58 % |  24.35 %  |
 |    F1     | 10.98 % |  18.34 %  |
 
-### Parser Rbranch
+#### Parser Rbranch
 
 |           | Labeled | Unlabeled |
 |:---------:|:-------:|:---------:|
@@ -47,7 +47,7 @@ Se implemento el algoritmo CKY en un módulo *cky_parser.py*, podemos encotrar u
 Se agrego a los tests un test con una gramática y una oración tal que la oración tenga más de un análisis posible (sintácticamente ambigua).
 
 
-### Gramática ambigua
+#### Gramática ambigua
 
 |   Producción    | Probabilidad |
 |:----------------|:------------:|
@@ -90,11 +90,63 @@ __**Notacion:**__
 Se implemento una UPCFG, es decir una PCFG cuyas reglas y probabilidades se obtienen a partir de un corpus de entrenamiento y luego se deslexicaliza completamente la PCFG.  
 Luego para parsear una oracion taggeada, nuestro parser utiliza el algoritmo de CKY (anteriormente implementado), utilizando la oración de POS tags para parsear e ignorando las entradas léxicas.
 
+#### Resultados usando Parser CKY
 
+|                     | Labeled | Unlabeled |
+|:-------------------:|:-------:|:---------:|
+|      Precision      |  |  |
+|       Recall        |  |  |
+|         F1          |  |  |
+
+##### Tiempo de Evalución:
 
 Ejercicio 4: Markovización Horizontal
 -------------------------------------
 
+### Resultados de Evaluación para distintos ordenes de Markovización Horizontal
+
+### Markovización Horizontal de orden 0
+
+|                     | Labeled | Unlabeled |
+|:-------------------:|:-------:|:---------:|
+|      Precision      |  |  |
+|       Recall        |  |  |
+|         F1          |  |  |
+
+##### Tiempo de Evalución:
+
+
+#### Markovización Horizontal de orden 1
+
+|                     | Labeled | Unlabeled |
+|:-------------------:|:-------:|:---------:|
+|      Precision      |  |  |
+|       Recall        |  |  |
+|         F1          |  |  |
+
+##### Tiempo de Evalución:
+
+
+#### Markovización Horizontal de orden 2
+
+|                     | Labeled | Unlabeled |
+|:-------------------:|:-------:|:---------:|
+|      Precision      |  |  |
+|       Recall        |  |  |
+|         F1          |  |  |
+
+##### Tiempo de Evalución:
+
+
+#### Markovización Horizontal de orden 3
+
+|                     | Labeled | Unlabeled |
+|:-------------------:|:-------:|:---------:|
+|      Precision      |  |  |
+|       Recall        |  |  |
+|         F1          |  |  |
+
+##### Tiempo de Evalución:
 
 
 

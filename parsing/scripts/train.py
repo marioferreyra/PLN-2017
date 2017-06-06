@@ -2,7 +2,7 @@
 Train a parser.
 
 Usage:
-  train.py [-m <model>] -o <file>
+  train.py [-m <model>] [-n <order>] -o <file>
   train.py -h | --help
 
 Options:
@@ -11,6 +11,7 @@ Options:
                   rbranch: Right branching trees
                   lbranch: Left branching trees
                   upcfg: Unlexicalized Probabilistic Context-Free Grammar trees
+  -n <order>    Order of Horizontal Markovization
   -o <file>     Output model file.
   -h --help     Show this screen.
 """
@@ -41,7 +42,13 @@ if __name__ == '__main__':
 
     print('Training model ...')
     # x = list(corpus.parsed_sents())[:10]
-    model = models[opts['-m']](corpus.parsed_sents())
+    m = opts['-m']  # Modelo Elegido
+    n = int(opts['-n'])  # Orden Markovizacion Horizontal
+    if (n is not None) and (m == "upcfg"):
+        model = models[opts['-m']](corpus.parsed_sents(), horzMarkov=n)
+    else:
+        model = models[opts['-m']](corpus.parsed_sents())
+    # model = models[opts['-m']](corpus.parsed_sents())
     # x = corpus.parsed_sents()
     # model = models[opts['-m']](x)
 
