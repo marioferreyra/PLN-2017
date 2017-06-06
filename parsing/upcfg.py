@@ -20,8 +20,6 @@ class UPCFG:
         productions_counts = defaultdict(int)
         # { A : count(A) }
         lhs_count = defaultdict(int)  # left_hand_side_count
-        # {A -> B : count(A -> B) / count(A)}
-        probability_ML = defaultdict(float)
 
         self.start = start  # Para la gramatica del parser CKY
         self.prods = []  # Lista de producciones
@@ -43,19 +41,18 @@ class UPCFG:
                 productions_counts[prod] += 1
                 lhs_count[prod.lhs()] += 1
 
-        for prod, count in productions_counts.items():
-            # type(prod): <class 'nltk.grammar.Production'>
-            # type(count): int
-            # type(prod.lhs): <class 'nltk.grammar.Nonterminal'>
-            probability_ML[prod] = float(count) / lhs_count.get(prod.lhs(), 0)
-
-        for production, q_ML in probability_ML.items():
+        for prod, count_prod in productions_counts.items():
             # type(production): <class 'nltk.grammar.Production'>
-            # type(q_ML): float
+                # production : A -> B
+                # type(count_prod): int
+            # count_prod : count(A -> B)
+            count_lhs = lhs_count.get(prod.lhs(), 0)
+
             # type(prod.lhs): <class 'nltk.grammar.Nonterminal'>
             # type(prod.rhs): <class 'tuple'>
-            self.prods += [ProbabilisticProduction(production.lhs(),
-                                                   production.rhs(),
+            q_ML = float(count_prod) / count_lhs
+            self.prods += [ProbabilisticProduction(prod.lhs(),
+                                                   prod.rhs(),
                                                    prob=q_ML)]
             # Cada elemento de self.prods es del tipo:
             #     <class 'nltk.grammar.ProbabilisticProduction'>

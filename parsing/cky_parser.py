@@ -36,6 +36,7 @@ class CKYParser:
         """
         # type(grammar) = nltk.grammar.PCFG
         self.grammar = grammar
+        self.start = grammar.start()
 
         # Ej: { Noun : { (pescado,) : 0.1, (gato,) : 0.9 } }
         self.productions = defaultdict(lambda: defaultdict(float))
@@ -119,7 +120,10 @@ class CKYParser:
                                 bp[i, j][X] = Tree(X, [t1, t2])
 
         # Output
-        return pi[1, n].get("S", float("-inf")), bp[1, n].get("S", None)
+        output_pi = pi[1, n].get(str(self.start), float("-inf"))
+        output_bp = bp[1, n].get(str(self.start), None)
+
+        return output_pi, output_bp
 
 
 # # PARA TEST

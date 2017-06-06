@@ -19,7 +19,7 @@ import pickle
 
 from corpus.ancora import SimpleAncoraCorpusReader
 
-from parsing.baselines import Flat, RBranch, LBranch
+from parsing.baselines import Flat, LBranch, RBranch
 from parsing.upcfg import UPCFG
 
 
