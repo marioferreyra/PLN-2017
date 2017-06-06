@@ -149,11 +149,19 @@ F1={:2.2f}%) | Unlabeled: (P={:2.2f}%, R={:2.2f}%, F1={:2.2f}%)'
     print("Parsed {} sentences".format(n))
     print("")
     print("##### Labeled")
-    print("* Precision = {:2.2f}% ({} / {})".format(labeled_prec, labeled_hits, total_model))
-    print("* Recall = {:2.2f}% ({} / {})".format(labeled_rec, labeled_hits, total_gold))
+    print("* Precision = {:2.2f}% ({} / {})".format(labeled_prec,
+                                                    labeled_hits,
+                                                    total_model))
+    print("* Recall = {:2.2f}% ({} / {})".format(labeled_rec,
+                                                 labeled_hits,
+                                                 total_gold))
     print("* F1 = {:2.2f}%".format(labeled_f1))
     print("")
     print("##### Unlabeled")
-    print("* Precision = {:2.2f}% ({} / {})".format(unlabeled_prec, unlabeled_hits, total_model))
-    print("* Recall = {:2.2f}% ({} / {})".format(unlabeled_rec, unlabeled_hits, total_gold))
+    print("* Precision = {:2.2f}% ({} / {})".format(unlabeled_prec,
+                                                    unlabeled_hits,
+                                                    total_model))
+    print("* Recall = {:2.2f}% ({} / {})".format(unlabeled_rec,
+                                                 unlabeled_hits,
+                                                 total_gold))
     print("* F1 = {:2.2f}%".format(unlabeled_f1))
