@@ -43,9 +43,9 @@ if __name__ == '__main__':
     print('Training model ...')
     # x = list(corpus.parsed_sents())[:10]
     m = opts['-m']  # Modelo Elegido
-    n = int(opts['-n'])  # Orden Markovizacion Horizontal
+    n = opts['-n']  # Orden Markovizacion Horizontal
     if (n is not None) and (m == "upcfg"):
-        model = models[opts['-m']](corpus.parsed_sents(), horzMarkov=n)
+        model = models[opts['-m']](corpus.parsed_sents(), horzMarkov=int(n))
     else:
         model = models[opts['-m']](corpus.parsed_sents())
     # model = models[opts['-m']](corpus.parsed_sents())
