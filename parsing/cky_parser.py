@@ -1,8 +1,8 @@
 from collections import defaultdict
-from nltk.tree import Tree # http://www.nltk.org/_modules/nltk/tree.html
+from nltk.tree import Tree  # http://www.nltk.org/_modules/nltk/tree.html
 from math import log
 
-import pprint
+# import pprint
 
 # Para imprimir de forma legible
 # https://docs.python.org/3/library/pprint.html
@@ -35,37 +35,28 @@ class CKYParser:
         grammar -- a binarised NLTK PCFG.
         """
         # type(grammar) = nltk.grammar.PCFG
-        self.grammar = grammar
         self.start = grammar.start()
-
-        # Ej: { Noun : { (pescado,) : 0.1, (gato,) : 0.9 } }
-        self.productions = defaultdict(lambda: defaultdict(float))
 
         # Ej: { (pescado,) :  {'Noun': 0.1} }
         #     { (gato,) : {'Noun': 0.9} }
-        self.productions_check = defaultdict(lambda: defaultdict(float))
+        productions_check = defaultdict(lambda: defaultdict(float))
 
-        for prod in self.grammar.productions():
+        for prod in grammar.productions():
             # type(prod): <class 'nltk.grammar.ProbabilisticProduction'>
             # type(prod.lhs): <class 'nltk.grammar.Nonterminal'>
             # type(prod.rhs): <class 'tuple'>
             #   Cada elemento de prod.rhs() es del tipo:
             #       <class 'nltk.grammar.Nonterminal'>
             # type(prod.prob()): <class 'float'>
-            left_hand_side = lhs = str(prod.lhs())
+            lhs = str(prod.lhs())  # Left hand side
             # prod.rhs() es una tupla de non-terminals => Las pasamos a str
             # porque las palabras son str, para su posterior check.
-            right_hand_side = rhs = tuple([str(nt) for nt in prod.rhs()])
+            rhs = tuple([str(nt) for nt in prod.rhs()])  # Right hand side
             probability = prod.prob()
 
-            self.productions[lhs][rhs] = probability
-            self.productions_check[rhs][lhs] = probability
+            productions_check[rhs][lhs] = probability
 
-        self.productions = dict(self.productions)
-        self.productions_check = dict(self.productions_check)
-
-        # pprint.pprint(self.productions)
-        # pprint.pprint(self.productions_check)
+        self.productions_check = dict(productions_check)
 
     def parse(self, sent):
         """
@@ -73,14 +64,12 @@ class CKYParser:
 
         sent -- the sequence of terminals.
         """
-        productions = self.productions
         productions_check = self.productions_check
         n = len(sent)  # sent = x_1, x_2, x_3, ..., x_n
-                       #         0    1    2   ...   n-1
 
-        # { (i, j) : {"Non-terminal" : prob} }
+        # { (i, j) : {str : prob} }
         self._pi = pi = {}
-        # { (i, j) : {"Non-terminal" : Tree.fromstring(...)} }
+        # { (i, j) : {str : Tree.fromstring(...)} }
         self._bp = bp = {}
 
         # Inicializacion
@@ -88,12 +77,9 @@ class CKYParser:
             x_i = sent[i-1]
             pi[i, i] = defaultdict()
             bp[i, i] = defaultdict()
-            for X, q in productions_check[(x_i,)].items():
-                pi[i, i][X] = log2Extended(q)
+            for X, probability in productions_check[(x_i,)].items():
+                pi[i, i][X] = log2Extended(probability)
                 bp[i, i][X] = Tree(X, [x_i])
-
-        # pprint.pprint(pi)
-        # pprint.pprint(bp)
 
         # Algoritmo
         for l in range(1, n):  # [1 ... n-1]
@@ -105,45 +91,25 @@ class CKYParser:
                     for Y, prob_Y in pi[i, s].items():
                         for Z, prob_Z in pi[s+1, j].items():
                             if (Y, Z) in productions_check.keys():
-                                max_log_prob = float("-inf")
-                                for X, q_X_YZ in productions_check[Y, Z].items():
-                                    new_log_prob = log2Extended(q_X_YZ)
+                                for X, qXYZ in productions_check[Y, Z].items():
+                                    new_log_prob = log2Extended(qXYZ)
                                     new_log_prob += prob_Y
                                     new_log_prob += prob_Z
 
-                                    if max_log_prob < new_log_prob:
-                                        max_log_prob = new_log_prob
-
-                                pi[i, j][X] = max_log_prob
-                                t1 = bp[i, s][Y]
-                                t2 = bp[s+1, j][Z]
-                                bp[i, j][X] = Tree(X, [t1, t2])
+                                    # new_lp : new_log_prob
+                                    # Si pi[i, j][X] no esta => poner new_lp
+                                    # Si pi[i, j][X] no esta y new_lp es mejor
+                                    #                   => poner new_lp
+                                    # (y tambien bp)
+                                    check_val = pi[i, j].get(X, float('-inf'))
+                                    if check_val < new_log_prob:
+                                        pi[i, j][X] = new_log_prob
+                                        t1 = bp[i, s][Y]
+                                        t2 = bp[s+1, j][Z]
+                                        bp[i, j][X] = Tree(X, [t1, t2])
 
         # Output
         output_pi = pi[1, n].get(str(self.start), float("-inf"))
         output_bp = bp[1, n].get(str(self.start), None)
 
         return output_pi, output_bp
-
-
-# # PARA TEST
-# from nltk.grammar import PCFG
-
-# grammar = PCFG.fromstring(
-#             """
-#                 S -> NP VP              [1.0]
-#                 NP -> Det Noun          [0.6]
-#                 NP -> Noun Adj          [0.4]
-#                 VP -> Verb NP           [1.0]
-#                 Det -> 'el'             [1.0]
-#                 Noun -> 'gato'          [0.9]
-#                 Noun -> 'pescado'       [0.1]
-#                 Verb -> 'come'          [1.0]
-#                 Adj -> 'crudo'          [1.0]
-#             """)
-
-# cky = CKYParser(grammar)
-
-# sent = ['el', 'gato', 'come', 'pescado', 'crudo']
-
-# pi, bp = cky.parse(sent)

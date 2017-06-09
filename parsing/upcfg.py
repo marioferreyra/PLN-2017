@@ -81,7 +81,7 @@ class UPCFG:
         log_probability, tree = self.my_parser.parse(tags)
 
         # Si no se puede parsear con CKY, entonces devolvemos el Flat
-        if tree is None:
+        if log_probability == float("-inf"):
             return Tree(self.start, [Tree(t, [w]) for w, t in tagged_sent])
 
         tree.un_chomsky_normal_form()
