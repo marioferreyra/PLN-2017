@@ -1,6 +1,6 @@
+import xml.etree.ElementTree as ET
 # https://docs.python.org/2/library/xml.etree.elementtree.html
 # https://docs.python.org/3/library/xml.etree.elementtree.html
-import xml.etree.ElementTree as ET
 
 
 class Tweet:
@@ -19,7 +19,7 @@ def readXMLTrain(xml_file):
 
     tweets = []  # Lista de tweets
     for tweet in root.iter('tweet'):
-        tweet_id = long(tweet.find('tweetid').text)  # ID del tweet
+        tweet_id = int(tweet.find('tweetid').text)  # ID del tweet
         user = tweet.find('user').text  # Usuario del tweet
         content = tweet.find('content').text  # Contenido del tweet
         date = tweet.find('date').text  # Fecha del tweet
@@ -30,7 +30,7 @@ def readXMLTrain(xml_file):
         polarity = polarityTagging(polarity)  # Polaridad del tweet
 
         # El tweet debe tener contenido para poder analizar su polaridad
-        if content != None:
+        if content is not None:
             tweet = Tweet(tweet_id, user, date, lang, content, polarity)
             tweets.append(tweet)
 
@@ -43,7 +43,7 @@ def readXMLTest(xml_file):
 
     tweets = []  # Lista de tweets
     for tweet in root.iter('tweet'):
-        tweet_id = long(tweet.find('tweetid').text)  # ID del tweet
+        tweet_id = int(tweet.find('tweetid').text)  # ID del tweet
         user = tweet.find('user').text  # Usuario del tweet
         content = tweet.find('content').text  # Contenido del tweet
         date = tweet.find('date').text  # Fecha del tweet
@@ -52,7 +52,7 @@ def readXMLTest(xml_file):
         polatity = "NONE"  # A los tweets sin polaridad los taggeamos como NONE
 
         # El tweet debe tener contenido para poder analizar su polaridad
-        if content != None:
+        if content is not None:
             tweet = Tweet(tweet_id, user, date, lang, content, polatity)
             tweets.append(tweet)
 
@@ -60,31 +60,13 @@ def readXMLTest(xml_file):
 
 
 def polarityTagging(polarity):
+    """
+    Taggea un tweet segun su polaridad:
+        * NONE = 0
+        * N = 0
+        * NEU = 0
+        * P = 3
+    """
     polarity_tag = {'NONE': 0, 'N': 1, 'NEU': 2, 'P': 3}
 
     return polarity_tag.get(polarity, None)
-
-
-# PARA TESTEAR
-
-tweets = readXMLTrain("/home/mario/Escritorio/TEST/entrenador.xml")
-for tweet in tweets:
-    print("===================")
-    print(tweet, type(tweet))
-    print(tweet.id, type(tweet.id))
-    print(tweet.user, type(tweet.user))
-    print(tweet.content, type(tweet.content))
-    print(tweet.date, type(tweet.date))
-    print(tweet.lang, type(tweet.lang))
-    print(tweet.polarity, type(tweet.polarity))
-
-# tweets = readXMLTest("/home/mario/Escritorio/TEST/prueba.xml")
-# for tweet in tweets:
-#     print("===================")
-#     print(tweet, type(tweet))
-#     print(tweet.id, type(tweet.id))
-#     print(tweet.user, type(tweet.user))
-#     print(tweet.content, type(tweet.content))
-#     print(tweet.date, type(tweet.date))
-#     print(tweet.lang, type(tweet.lang))
-#     print(tweet.polarity, type(tweet.polarity))
