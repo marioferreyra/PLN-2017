@@ -13,7 +13,11 @@ class Tweet:
         self.polarity = polarity
 
 
-def readXMLTrain(xml_file):
+def readXMLTrain(path, file):
+    """
+    Lee XML
+    """
+    xml_file = path + "/" + file
     tree = ET.parse(xml_file)  # Parseamos el XML en un arbol
     root = tree.getroot()  # Obtenemos la raiz del arbol (<tweets>)
 
@@ -37,7 +41,11 @@ def readXMLTrain(xml_file):
     return tweets
 
 
-def readXMLTest(xml_file):
+def readXMLTest(path, file):
+    """
+    Lee XML
+    """
+    xml_file = path + "/" + file
     tree = ET.parse(xml_file)  # Parseamos el XML en un arbol
     root = tree.getroot()  # Obtenemos la raiz del arbol (<tweets>)
 
@@ -63,8 +71,8 @@ def polarityTagging(polarity):
     """
     Taggea un tweet segun su polaridad:
         * NONE = 0
-        * N = 0
-        * NEU = 0
+        * N = 1
+        * NEU = 2
         * P = 3
     """
     polarity_tag = {'NONE': 0, 'N': 1, 'NEU': 2, 'P': 3}

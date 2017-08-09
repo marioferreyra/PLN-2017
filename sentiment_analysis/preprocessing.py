@@ -1,8 +1,12 @@
 import re
 import unicodedata
 from nltk.corpus import stopwords
+from nltk.stem import SnowballStemmer
 
+# Descargar las stopwords usando el comando nltk.download()
 spanish_stopwords = stopwords.words('spanish')  # Stopwords del español
+
+stemmer = SnowballStemmer("spanish")
 
 def tweet_cleaner(content):
     """
@@ -66,3 +70,13 @@ class RepeatReplacer(object):
             return self.replace(repl_word)
         else:
             return repl_word
+
+def tweet_stemming(content_list):
+    """
+    Realiza el stem de una lista de palabras.
+    """
+    result = []
+    for word in content_list:
+        result.append(stemmer.stem(word))
+
+    return result
