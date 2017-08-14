@@ -110,27 +110,24 @@ if __name__ == '__main__':
     tweets_list = readXMLTest(path, file)
     tweets_content = [tweet.content for tweet in tweets_list]
 
-    # Polaridad Golden Random <===> NO CORRECTO
-    y_test = [random.randint(0, 3) for _ in range(1899)]
-
     # ============================
     # Evaluacion usando emoticones
     classified_tweets_emoticons = model.emoticons_classify(tweets_content)
     counter_emoticons = Counter(classified_tweets_emoticons)
-    accuracy_emoticons = accuracy_score(y_test, classified_tweets_emoticons)
+    accuracy_emoticons = estimate_accuracy(classified_tweets_emoticons, 1000)
 
-    print("\nResultados usando Emoticones")
-    print("============================")
+    print("\nPreclasificacion usando Emoticones")
+    print("==================================")
     print_results(counter_emoticons, accuracy_emoticons)
 
     # ==============================
     # Evaluacion usando clasificador
     classified_tweets = model.classify_tweets(tweets_content)
     counter = Counter(classified_tweets)
-    accuracy = accuracy_score(y_test, classified_tweets)
+    accuracy = estimate_accuracy(classified_tweets, 1000)
 
-    print("\nResultados usando Clasificador")
-    print("==============================")
+    print("\nClasificacion usando Clasificador")
+    print("=================================")
     print_results(counter, accuracy)
 
     # ===========================================
@@ -139,10 +136,10 @@ if __name__ == '__main__':
     classified_heuristic_rule = heuristic_classification(classified_tweets,
                                                          classified_tw_emo)
     counter_heuristic = Counter(classified_heuristic_rule)
-    accuracy_heuristic = accuracy_score(y_test, classified_heuristic_rule)
+    accuracy_heuristic = estimate_accuracy(classified_heuristic_rule, 1000)
 
-    print("\nResultados usando Clasificador y Emoticones")
-    print("===========================================")
+    print("\nClasificacion usando Clasificador y Emoticones")
+    print("==============================================")
     print_results(counter_heuristic, accuracy_heuristic)
 
     # ===================================================
