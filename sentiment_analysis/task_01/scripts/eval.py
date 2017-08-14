@@ -1,5 +1,5 @@
 """
-Evalate a model with a list of tweets.
+Evaluate a model with a list of tweets.
 
 Usage:
   eval.py -i <file> -r <rst>

@@ -33,7 +33,6 @@ def tweet_cleaner(content):
         * Removemos signos de puntuacion.
         * Removemos nombres de usuarios (ie. @user).
         * Removemos caracteres no alfanumericos.
-        * Removemos signos de puntuacion.
 
     Finalmente retornamos una cadena, es decir, el tweet limpio.
     """
