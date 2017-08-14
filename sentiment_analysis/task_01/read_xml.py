@@ -1,10 +1,18 @@
 import xml.etree.ElementTree as ET
-# https://docs.python.org/2/library/xml.etree.elementtree.html
 # https://docs.python.org/3/library/xml.etree.elementtree.html
 
 
 class Tweet:
+
     def __init__(self, tweet_id, user, date, lang, content, polarity):
+        """
+        tweet_id -- ID del tweet.
+        user -- Usario del tweet.
+        date -- Fecha del tweet.
+        lang -- Lenguaje del tweet.
+        content -- Contenido del tweet.
+        polarity -- Polaridad del tweet.
+        """
         self.id = tweet_id
         self.user = user
         self.content = content
@@ -15,7 +23,8 @@ class Tweet:
 
 def readXMLTrain(path, file):
     """
-    Lee XML
+    Procesa un archivo XML de tweets con polaridad.
+    Devuelve una lista de Tweets (clases)
     """
     xml_file = path + "/" + file
     tree = ET.parse(xml_file)  # Parseamos el XML en un arbol
@@ -43,7 +52,8 @@ def readXMLTrain(path, file):
 
 def readXMLTest(path, file):
     """
-    Lee XML
+    Procesa un archivo XML de tweets sin polaridad.
+    Devuelve una lista de Tweets (clases)
     """
     xml_file = path + "/" + file
     tree = ET.parse(xml_file)  # Parseamos el XML en un arbol

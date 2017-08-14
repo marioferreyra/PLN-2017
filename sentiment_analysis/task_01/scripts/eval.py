@@ -1,5 +1,5 @@
 """
-Evaulate a model.
+Evalate a model with a list of tweets.
 
 Usage:
   eval.py -i <file> -r <rst>
@@ -11,18 +11,73 @@ Options:
   -h --help     Show this screen.
 """
 import pickle
+import random
 from docopt import docopt
 from sentiment_analysis.task_01.read_xml import readXMLTest
 from collections import Counter
-from sklearn.metrics import accuracy_score, precision_score
-from sklearn.metrics import recall_score, f1_score
-import random
+from sklearn.metrics import accuracy_score
+# from sklearn.metrics import precision_score, recall_score, f1_score
+
+
+def estimate_accuracy(classified_tweets, simulations):
+    """
+    Estimando la Accuracy simulando con distintos Golden Polarity
+    (esto es porque el Corpus Test no tiene anotadas las polaridades).
+
+    NOTA: Esto no es lo mejor.
+    """
+    # Simulamos unas "simulations" veces
+    a = 0
+    for _ in range(simulations):
+        # 1899 es la cantidad de tweets en Corpus Test
+        golden_polarity = [random.randint(0, 3) for _ in range(1899)]
+        a += accuracy_score(golden_polarity, classified_tweets)
+
+    accuracy = float(a) / simulations
+
+    return accuracy
+
+
+def heuristic_classification(classified_tweets, classified_tweets_emoticons):
+    """
+    La polaridad se define por la siguiente regla:
+     * Usamos como preclasificacion a la dada por el uso de los emoticones.
+     * Mantenemos la polaridad predefida si el tweet es marcado como "P" o "N"
+       de lo contrario tomamos el valor estimado por el clasificador.
+    """
+    assert len(classified_tweets) == len(classified_tweets_emoticons)
+
+    classified_heuristic_rule = []
+    for tw_c, tw_e in zip(classified_tweets, classified_tweets_emoticons):
+        # Clasificacion usando emoticones es "N" o "P"
+        if tw_e in {1, 3}:
+            classified_heuristic_rule.append(tw_e)
+        # Clasificacion usando emoticones es "NONE" o "NEU"
+        else:
+            classified_heuristic_rule.append(tw_c)
+
+    assert len(classified_heuristic_rule) == len(classified_tweets)
+
+    return classified_heuristic_rule
+
+
+def print_results(counter_results, accuracy):
+    """
+    Imprime los resutados obtenidos.
+    """
+    print("Tweets analizados: {}".format(sum(counter_results.values())))
+    print("\t* NONE = {}".format(counter_results.get(0, None)))
+    print("\t* N = {}".format(counter_results.get(1, None)))
+    print("\t* NEU = {}".format(counter_results.get(2, None)))
+    print("\t* P = {}".format(counter_results.get(3, None)))
+    print("\t* Accuracy = {}%".format(round(accuracy * 100, 2)))
 
 
 def create_file_result(filename, list_id, list_polarity):
     """
-    Crea el archivo con los resultados que se obtuvieron con el modelo
-    entrenado.
+    Crea un archivo txt con los resultados de las polaridades obtenidas.
+    El formato es el siguiente:
+        tweet_id \t polarity
     """
     assert len(list_id) == len(list_polarity)
 
@@ -53,35 +108,45 @@ if __name__ == '__main__':
     path = "/home/mario/Escritorio/PLN-2017/sentiment_analysis/task_01/Corpus"
     file = "TASS2017_T1_test.xml"
     tweets_list = readXMLTest(path, file)
-
     tweets_content = [tweet.content for tweet in tweets_list]
 
-    print("Evaluating model")
-    model_classify_tweets = model.classify_tweets(tweets_content)
+    # Polaridad Golden Random <===> NO CORRECTO
+    y_test = [random.randint(0, 3) for _ in range(1899)]
 
-    counter = Counter(model_classify_tweets)  # Cantidad de polaridades
+    # ============================
+    # Evaluacion usando emoticones
+    classified_tweets_emoticons = model.emoticons_classify(tweets_content)
+    counter_emoticons = Counter(classified_tweets_emoticons)
+    accuracy_emoticons = accuracy_score(y_test, classified_tweets_emoticons)
 
-    print(counter)
-    print("Tweets analizados: {}".format(sum(counter.values())))
-    print("\t* NONE = {}".format(counter.get(0, None)))
-    print("\t* N = {}".format(counter.get(1, None)))
-    print("\t* NEU = {}".format(counter.get(2, None)))
-    print("\t* P = {}".format(counter.get(3, None)))
+    print("\nResultados usando Emoticones")
+    print("============================")
+    print_results(counter_emoticons, accuracy_emoticons)
 
-    y_test = [random.randint(0, 3) for _ in range(1899)]  # RANDOM NO CORRECTO
+    # ==============================
+    # Evaluacion usando clasificador
+    classified_tweets = model.classify_tweets(tweets_content)
+    counter = Counter(classified_tweets)
+    accuracy = accuracy_score(y_test, classified_tweets)
 
-    accuracy = accuracy_score(y_test, model_classify_tweets)
-    # precision = precision_score(y_test, model_classify_tweets)
-    # recall = recall_score(y_test, model_classify_tweets)
-    # f1 = f1_score(y_test, model_classify_tweets)
+    print("\nResultados usando Clasificador")
+    print("==============================")
+    print_results(counter, accuracy)
 
-    print("")
-    print("Accuracy = {}%".format(round(accuracy * 100, 2)))
-    # print("Precision = {}%".format(round(precision * 100, 2)))
-    # print("Recall = {}%".format(round(recall * 100, 2)))
-    # print("F1 = {}%".format(round(f1 * 100, 2)))
+    # ===========================================
+    # Evaluacion usando emoticones y clasificador
+    classified_tw_emo = classified_tweets_emoticons
+    classified_heuristic_rule = heuristic_classification(classified_tweets,
+                                                         classified_tw_emo)
+    counter_heuristic = Counter(classified_heuristic_rule)
+    accuracy_heuristic = accuracy_score(y_test, classified_heuristic_rule)
 
-    # Creamos archivo con los resultados
+    print("\nResultados usando Clasificador y Emoticones")
+    print("===========================================")
+    print_results(counter_heuristic, accuracy_heuristic)
+
+    # ===================================================
+    # Creamos archivo con los resultados del clasificador
     tweets_id = [tweet.id for tweet in tweets_list]
     r = opts['-r']
-    create_file_result(r, tweets_id, model_classify_tweets)
+    create_file_result(r, tweets_id, classified_tweets)

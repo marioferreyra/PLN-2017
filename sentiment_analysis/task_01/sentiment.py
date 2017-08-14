@@ -4,6 +4,7 @@ from sentiment_analysis.task_01.preprocessing import remove_repeated
 from sentiment_analysis.task_01.preprocessing import change_to_risas
 from sentiment_analysis.task_01.preprocessing import remove_stopwords
 from sentiment_analysis.task_01.preprocessing import tweet_stemming
+from sentiment_analysis.task_01.preprocessing import spanish_stopwords
 
 from nltk.tokenize import TweetTokenizer
 
@@ -15,15 +16,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import LinearSVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-# from sklearn.naive_bayes import GaussianNB
 
 from sklearn.pipeline import Pipeline
-
-
-from nltk.corpus import stopwords
-
-# Recordatorio: Ver se usar cross validation para determinar los mejores
-# parametros del clasificador
 
 
 class TwitterPolarity:
@@ -33,8 +27,27 @@ class TwitterPolarity:
                  name_vectorizer="count",
                  name_classifier="svc"):
         """
-        Init
+        tweets_list -- Lista de los contenidos de cada tweet.
+        name_vectorizer -- Tipo de vectorizador a usar
+                           [default: CountVectorizer]
+        name_classifier -- Tipo de Clasificador a usar
+                           [default: LinearSVC]
         """
+        # Emoticones Positivos
+        self.positive_emoticons = [":-)", ":)", ":D", ":o)", ":]", "D:3",
+                                   ":c)", ":>", "=]", "8)", "=)", ":}", ":^)",
+                                   ":-D", "8-D", "8D", "x-D", "xD", "X-D",
+                                   "XD", "=-D", "=D", "=-3", "=3", "B^D",
+                                   ":')", ":*", ":-*", ":^*", ";-)", ";)",
+                                   "*-)", "*)", ";-]", ";]", ";D", ";^)",
+                                   ">:P", ":-P", ":P", "X-P", "x-p", "xp",
+                                   "XP", ":-p", ":p", "=p", ":-b", ":b"]
+
+        # Emoticones Negativos
+        self.negative_emoticons = [">:[", ":-(", ":(", ":-c", ":-<", ":<",
+                                   ":-[", ":[", ":{", ";(", ":-||", ">:(",
+                                   ":'-(", ":'(", "D:<", "D=", "v.v"]
+
         self.tweets_id = [tweet.id for tweet in tweets_list]
         self.tweets_content = [tweet.content for tweet in tweets_list]
         self.tweets_polarity = [tweet.polarity for tweet in tweets_list]
@@ -56,10 +69,8 @@ class TwitterPolarity:
 
     def select_vectorizer(self, name_vectorizer):
         """
-        Elije el vectorizador a usar
+        Elije el vectorizador a usar.
         """
-        spanish_stopwords = stopwords.words('spanish')  # Stopwords del español
-
         vectorizer = CountVectorizer(analyzer='word',
                                      tokenizer=self.my_tokenizer,
                                      lowercase=True,
@@ -74,7 +85,7 @@ class TwitterPolarity:
 
     def select_classifier(self, name_classifier):
         """
-        Elije el clasificador a usar
+        Elije el clasificador a usar.
         """
         classifier = LinearSVC()
         if name_classifier == "logreg":
@@ -86,7 +97,7 @@ class TwitterPolarity:
 
     def my_tokenizer(self, content):
         """
-        Mi tokenizador
+        Tokenizador creado usando los metodos del modulo preprocessing.py
         """
         tw = delete_tildes(content)
         tw = tweet_cleaner(tw)
@@ -98,14 +109,39 @@ class TwitterPolarity:
 
         return tw
 
-    def classify_tweets(self, content):
+    def emoticons_classify(self, tweets_content):
         """
-        Predecimos los tweets
+        Pre-clasificacion de los tweets en base a los emoticones:
+            * Si pos_emo = 0 y neg_emo = 0, el tweet es marcado como "NONE".
+            * Si pos_emo = 0 y neg_emo > 0, el tweet es marcado como "N".
+            * Si pos_emo > 0 y neg_emo > 0, el tweet es marcado como "NEU".
+            * Si pos_emo > 0 y neg_emo = 0, el tweet es marcado como "P".
         """
-        return self.pipeline.predict(content)
+        polarity_tag = {'NONE': 0, 'N': 1, 'NEU': 2, 'P': 3}
 
-    def emoticons_classify(self, content):
+        classified_tweets = []
+        for tw_c in tweets_content:
+            tw = self.tweet_tokenizer.tokenize(tw_c)
+
+            # Numero de emoticones positivos en el tweet
+            pos_emo = len(set(self.positive_emoticons) & set(tw))
+
+            # Numero de emoticones negativos en el tweet
+            neg_emo = len(set(self.negative_emoticons) & set(tw))
+
+            if pos_emo == 0 and neg_emo == 0:
+                classified_tweets.append(polarity_tag.get('NONE', None))
+            elif pos_emo == 0 and neg_emo > 0:
+                classified_tweets.append(polarity_tag.get('N', None))
+            elif pos_emo > 0 and neg_emo > 0:
+                classified_tweets.append(polarity_tag.get('NEU', None))
+            elif pos_emo > 0 and neg_emo == 0:
+                classified_tweets.append(polarity_tag.get('P', None))
+
+        return classified_tweets
+
+    def classify_tweets(self, tweets_content):
         """
-        Clasificacion en base a los emoticones.
+        Clasificamos los tweets usando la estimacion dada por el clasificador.
         """
-        pass
+        return self.pipeline.predict(tweets_content)

@@ -1,5 +1,5 @@
 """
-Train a list of tweets.
+Train a model with a list of tweets.
 
 Usage:
   train.py [-v <vec>] [-c <clf>] -o <file>

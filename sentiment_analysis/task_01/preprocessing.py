@@ -6,8 +6,6 @@ from nltk.stem import SnowballStemmer
 # Descargar las stopwords usando el comando nltk.download()
 spanish_stopwords = stopwords.words('spanish')  # Stopwords del español
 
-stemmer = SnowballStemmer("spanish")  # Lematizador del español
-
 
 def delete_tildes(content):
     """
@@ -25,6 +23,7 @@ def delete_tildes(content):
             new_list += [c]
 
     return ''.join(new_list)
+
 
 def tweet_cleaner(content):
     """
@@ -44,6 +43,7 @@ def tweet_cleaner(content):
 
     return new_content
 
+
 def remove_repeated(word):
     """
     Remueve de una palabra los caracteres repetidos.
@@ -56,6 +56,7 @@ def remove_repeated(word):
         return remove_repeated(repl_word)
     else:
         return repl_word
+
 
 def reduce_laught_expression(word):
     """
@@ -90,6 +91,7 @@ def change_to_risas(word):
     else:
         return reduce_laught
 
+
 def remove_stopwords(content_list):
     """
     Removemos de una lista de palabras, aquellas que son muy frecuentes
@@ -102,6 +104,7 @@ def remove_stopwords(content_list):
 
     return important_words
 
+
 def tweet_stemming(content_list):
     """
 
@@ -112,6 +115,7 @@ def tweet_stemming(content_list):
         maravilla       |-> maravill
         maravillarse    |
     """
+    stemmer = SnowballStemmer("spanish")  # Lematizador del español
     result = []
     for word in content_list:
         result.append(stemmer.stem(word))
