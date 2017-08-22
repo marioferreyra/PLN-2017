@@ -1,10 +1,4 @@
-from sentiment_analysis.task_01.preprocessing import delete_tildes
-from sentiment_analysis.task_01.preprocessing import tweet_cleaner
-from sentiment_analysis.task_01.preprocessing import remove_repeated
-from sentiment_analysis.task_01.preprocessing import change_to_risas
-from sentiment_analysis.task_01.preprocessing import remove_stopwords
-from sentiment_analysis.task_01.preprocessing import tweet_stemming
-from sentiment_analysis.task_01.preprocessing import spanish_stopwords
+from sentiment_analysis.task_01.preprocessing import PreprocessingTweet
 
 from nltk.tokenize import TweetTokenizer
 
@@ -39,20 +33,16 @@ class TwitterPolarity:
         self.name_vectorizer = name_vectorizer  # Nombre del Vectorizador
         self.name_classifier = name_classifier  # Nombre del Clasificador
 
+        self.preprocessing = PreprocessingTweet()
+
         # Emoticones Positivos
-        self.positive_emoticons = {":-)", ":)", ":D", ":o)", ":]", "D:3",
-                                   ":c)", ":>", "=]", "8)", "=)", ":}", ":^)",
-                                   ":-D", "8-D", "8D", "x-D", "xD", "X-D",
-                                   "XD", "=-D", "=D", "=-3", "=3", "B^D",
-                                   ":')", ":*", ":-*", ":^*", ";-)", ";)",
-                                   "*-)", "*)", ";-]", ";]", ";D", ";^)",
-                                   ">:P", ":-P", ":P", "X-P", "x-p", "xp",
-                                   "XP", ":-p", ":p", "=p", ":-b", ":b"}
+        self.positive_emoticons = self.preprocessing.get_positive_emoticons()
 
         # Emoticones Negativos
-        self.negative_emoticons = {">:[", ":-(", ":(", ":-c", ":-<", ":<",
-                                   ":-[", ":[", ":{", ";(", ":-||", ">:(",
-                                   ":'-(", ":'(", "D:<", "D=", "v.v"}
+        self.negative_emoticons = self.preprocessing.get_positive_emoticons()
+
+        # Stopwords del español
+        self.spanish_stopwords = self.preprocessing.get_spanish_stopwords()
 
         # Tokenizador de tweets
         self.tweet_tokenizer = TweetTokenizer()
@@ -73,17 +63,17 @@ class TwitterPolarity:
         """
         Elije el vectorizador a usar.
         """
-        # vectorizer = CountVectorizer(analyzer='word',
-        #                              tokenizer=self.my_tokenizer,
-        #                              lowercase=True,
-        #                              stop_words=spanish_stopwords)
         vectorizer = CountVectorizer(analyzer='word',
-                                     tokenizer=self.my_tokenizer)
+                                     tokenizer=self.my_tokenizer,
+                                     lowercase=True,
+                                     stop_words=self.spanish_stopwords)
+        # vectorizer = CountVectorizer(analyzer='word',
+        #                              tokenizer=self.my_tokenizer)
         if name_vectorizer == "tfidf":
             vectorizer = TfidfVectorizer(analyzer='word',
                                          tokenizer=self.my_tokenizer,
                                          lowercase=True,
-                                         stop_words=spanish_stopwords)
+                                         stop_words=self.spanish_stopwords)
 
         return vectorizer
 
@@ -117,19 +107,16 @@ class TwitterPolarity:
 
     def my_tokenizer(self, tweet_content):
         """
-        Tokenizador creado usando los metodos del modulo preprocessing.py
+        Tokenizador creado usando los metodos de la clase PreprocessingTweet
         """
-        # IDEA: Buscar todos los emojis positivos y negativos y reemplazarlos
-        #       con los string "positiveemoticon" y "negativeemoticon"
-        #       Lo mismo con las palabras positivas y negativas:
-        #       "positiveword" y "negativeword"
-        tw = delete_tildes(tweet_content)
-        tw = tweet_cleaner(tw)
-        tw = remove_repeated(tw)
-        tw = change_to_risas(tw)
+        tw = self.preprocessing.delete_tildes(tweet_content)
+        tw = self.preprocessing.change_pos_neg_words_emojis(tw)
+        tw = self.preprocessing.tweet_cleaner(tw)
+        tw = self.preprocessing.remove_repeated(tw)
+        # tw = change_to_risas(tw)
         tw = self.tweet_tokenizer.tokenize(tw)
-        tw = remove_stopwords(tw)
-        tw = tweet_stemming(tw)
+        tw = self.preprocessing.remove_stopwords(tw)
+        tw = self.preprocessing.tweet_stemming(tw)
 
         return tw
 
