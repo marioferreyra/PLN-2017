@@ -109,7 +109,7 @@ def tweet_stemming(content_list):
 
     Dada una lista de palabras, a cada una de ellas se le realiza el Stemming.
     Stemming es el proceso por el cual transformamos cada palabra en su raiz.
-    Por ejemplo:
+    Ejemplo:
         maravilloso     |
         maravilla       |-> maravill
         maravillarse    |

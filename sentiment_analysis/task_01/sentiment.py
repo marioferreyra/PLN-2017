@@ -17,40 +17,42 @@ from sklearn.svm import LinearSVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 
+# Pipeline
 from sklearn.pipeline import Pipeline
 
 
 class TwitterPolarity:
 
     def __init__(self,
-                 tweets_list,
+                 tweets_content,
+                 tweets_polarity,
                  name_vectorizer="count",
                  name_classifier="svc"):
         """
-        tweets_list -- Lista de los contenidos de cada tweet.
+        tweets_content -- Lista con los Contenidos de cada tweet.
+        tweets_polarity -- Lista con las Polaridades de cada tweet.
         name_vectorizer -- Tipo de vectorizador a usar
                            [default: CountVectorizer]
         name_classifier -- Tipo de Clasificador a usar
                            [default: LinearSVC]
         """
+        self.name_vectorizer = name_vectorizer  # Nombre del Vectorizador
+        self.name_classifier = name_classifier  # Nombre del Clasificador
+
         # Emoticones Positivos
-        self.positive_emoticons = [":-)", ":)", ":D", ":o)", ":]", "D:3",
+        self.positive_emoticons = {":-)", ":)", ":D", ":o)", ":]", "D:3",
                                    ":c)", ":>", "=]", "8)", "=)", ":}", ":^)",
                                    ":-D", "8-D", "8D", "x-D", "xD", "X-D",
                                    "XD", "=-D", "=D", "=-3", "=3", "B^D",
                                    ":')", ":*", ":-*", ":^*", ";-)", ";)",
                                    "*-)", "*)", ";-]", ";]", ";D", ";^)",
                                    ">:P", ":-P", ":P", "X-P", "x-p", "xp",
-                                   "XP", ":-p", ":p", "=p", ":-b", ":b"]
+                                   "XP", ":-p", ":p", "=p", ":-b", ":b"}
 
         # Emoticones Negativos
-        self.negative_emoticons = [">:[", ":-(", ":(", ":-c", ":-<", ":<",
+        self.negative_emoticons = {">:[", ":-(", ":(", ":-c", ":-<", ":<",
                                    ":-[", ":[", ":{", ";(", ":-||", ">:(",
-                                   ":'-(", ":'(", "D:<", "D=", "v.v"]
-
-        self.tweets_id = [tweet.id for tweet in tweets_list]
-        self.tweets_content = [tweet.content for tweet in tweets_list]
-        self.tweets_polarity = [tweet.polarity for tweet in tweets_list]
+                                   ":'-(", ":'(", "D:<", "D=", "v.v"}
 
         # Tokenizador de tweets
         self.tweet_tokenizer = TweetTokenizer()
@@ -63,7 +65,7 @@ class TwitterPolarity:
 
         pipe = Pipeline([("vectorizador", v), ("clasificador", c)])
 
-        pipe.fit(self.tweets_content, self.tweets_polarity)
+        pipe.fit(tweets_content, tweets_polarity)
 
         self.pipeline = pipe
 
@@ -71,10 +73,12 @@ class TwitterPolarity:
         """
         Elije el vectorizador a usar.
         """
+        # vectorizer = CountVectorizer(analyzer='word',
+        #                              tokenizer=self.my_tokenizer,
+        #                              lowercase=True,
+        #                              stop_words=spanish_stopwords)
         vectorizer = CountVectorizer(analyzer='word',
-                                     tokenizer=self.my_tokenizer,
-                                     lowercase=True,
-                                     stop_words=spanish_stopwords)
+                                     tokenizer=self.my_tokenizer)
         if name_vectorizer == "tfidf":
             vectorizer = TfidfVectorizer(analyzer='word',
                                          tokenizer=self.my_tokenizer,
@@ -95,11 +99,31 @@ class TwitterPolarity:
 
         return classifier
 
-    def my_tokenizer(self, content):
+    def get_names_vectorizer_classifier(self):
+        """
+        Me devuelve el nombre del Vectorizador y del Clasificador usados.
+        """
+        vectorizers = {"count": "CountVectorizer",
+                       "tfidf": "TfidfVectorizer"}
+
+        classifiers = {"svc": "LinearSVC",
+                       "logreg": "LogisticRegression",
+                       "forest": "RandomForestClassifier"}
+
+        name_vec = vectorizers.get(self.name_vectorizer, None)
+        name_clas = classifiers.get(self.name_classifier, None)
+
+        return name_vec, name_clas
+
+    def my_tokenizer(self, tweet_content):
         """
         Tokenizador creado usando los metodos del modulo preprocessing.py
         """
-        tw = delete_tildes(content)
+        # IDEA: Buscar todos los emojis positivos y negativos y reemplazarlos
+        #       con los string "positiveemoticon" y "negativeemoticon"
+        #       Lo mismo con las palabras positivas y negativas:
+        #       "positiveword" y "negativeword"
+        tw = delete_tildes(tweet_content)
         tw = tweet_cleaner(tw)
         tw = remove_repeated(tw)
         tw = change_to_risas(tw)
@@ -109,7 +133,7 @@ class TwitterPolarity:
 
         return tw
 
-    def emoticons_classify(self, tweets_content):
+    def emoticons_classify(self, tweet_content):
         """
         Pre-clasificacion de los tweets en base a los emoticones:
             * Si pos_emo = 0 y neg_emo = 0, el tweet es marcado como "NONE".
@@ -120,14 +144,14 @@ class TwitterPolarity:
         polarity_tag = {'NONE': 0, 'N': 1, 'NEU': 2, 'P': 3}
 
         classified_tweets = []
-        for tw_c in tweets_content:
+        for tw_c in tweet_content:
             tw = self.tweet_tokenizer.tokenize(tw_c)
 
             # Numero de emoticones positivos en el tweet
-            pos_emo = len(set(self.positive_emoticons) & set(tw))
+            pos_emo = len(self.positive_emoticons & set(tw))
 
             # Numero de emoticones negativos en el tweet
-            neg_emo = len(set(self.negative_emoticons) & set(tw))
+            neg_emo = len(self.negative_emoticons & set(tw))
 
             if pos_emo == 0 and neg_emo == 0:
                 classified_tweets.append(polarity_tag.get('NONE', None))
