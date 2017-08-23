@@ -67,8 +67,6 @@ class TwitterPolarity:
                                      tokenizer=self.my_tokenizer,
                                      lowercase=True,
                                      stop_words=self.spanish_stopwords)
-        # vectorizer = CountVectorizer(analyzer='word',
-        #                              tokenizer=self.my_tokenizer)
         if name_vectorizer == "tfidf":
             vectorizer = TfidfVectorizer(analyzer='word',
                                          tokenizer=self.my_tokenizer,
@@ -113,7 +111,7 @@ class TwitterPolarity:
         tw = self.preprocessing.change_pos_neg_words_emojis(tw)
         tw = self.preprocessing.tweet_cleaner(tw)
         tw = self.preprocessing.remove_repeated(tw)
-        # tw = change_to_risas(tw)
+        tw = self.preprocessing.change_to_risas(tw)
         tw = self.tweet_tokenizer.tokenize(tw)
         tw = self.preprocessing.remove_stopwords(tw)
         tw = self.preprocessing.tweet_stemming(tw)
@@ -128,9 +126,7 @@ class TwitterPolarity:
             * Si pos_emo > 0 y neg_emo > 0, el tweet es marcado como "NEU".
             * Si pos_emo > 0 y neg_emo = 0, el tweet es marcado como "P".
         """
-        polarity_tag = {'NONE': 0, 'N': 1, 'NEU': 2, 'P': 3}
-
-        classified_tweets = []
+        polarity_emo = []
         for tw_c in tweet_content:
             tw = self.tweet_tokenizer.tokenize(tw_c)
 
@@ -141,15 +137,15 @@ class TwitterPolarity:
             neg_emo = len(self.negative_emoticons & set(tw))
 
             if pos_emo == 0 and neg_emo == 0:
-                classified_tweets.append(polarity_tag.get('NONE', None))
+                polarity_emo.append("NONE")
             elif pos_emo == 0 and neg_emo > 0:
-                classified_tweets.append(polarity_tag.get('N', None))
+                polarity_emo.append("N")
             elif pos_emo > 0 and neg_emo > 0:
-                classified_tweets.append(polarity_tag.get('NEU', None))
+                polarity_emo.append("NEU")
             elif pos_emo > 0 and neg_emo == 0:
-                classified_tweets.append(polarity_tag.get('P', None))
+                polarity_emo.append("P")
 
-        return classified_tweets
+        return polarity_emo
 
     def classify_tweets(self, tweets_content):
         """

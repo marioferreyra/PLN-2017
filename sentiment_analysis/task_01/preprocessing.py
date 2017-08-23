@@ -82,6 +82,37 @@ class PreprocessingTweet():
 
         return ''.join(new_list)
 
+    def change_pos_neg_words_emojis(self, content):
+        """
+        Reemplaza todas las palabras positivas y negativas presentes en los
+        conjuntos "self.positive_words" y "self.negative_words" por las
+        palabras "positiveword" y "negativeword" respectivamente.
+
+        Reemplaza todas los emoticones positivos y negativos presentes en los
+        conjuntos "positive_emoticons" y "negative_emoticons" por las
+        palabras "positiveemoticon" y "negativeemoticon" respectivamente.
+        """
+        content_tokenized = self.tweet_tokenizer.tokenize(content)
+
+        new_content_tokenized = []
+        for word in content_tokenized:
+            if word in self.positive_words:
+                new_word = "positiveword"
+            elif word in self.negative_words:
+                new_word = "negativeword"
+            elif word in positive_emoticons:
+                new_word = "positiveemoticon"
+            elif word in negative_emoticons:
+                new_word = "negativeemoticon"
+            else:
+                new_word = word
+
+            new_content_tokenized.append(new_word)
+
+        new_content = " ".join(new_content_tokenized)
+
+        return new_content
+
     def tweet_cleaner(self, content):
         """
         Limpiamos el contenido de un tweet de la siguiente forma:
@@ -98,7 +129,7 @@ class PreprocessingTweet():
 
         return new_content
 
-    def remove_repeated(self, word):
+    def remove_repeated_word(self, word):
         """
         Remueve de una palabra los caracteres repetidos.
         """
@@ -110,6 +141,21 @@ class PreprocessingTweet():
             return self.remove_repeated(repl_word)
         else:
             return repl_word
+
+    def remove_repeated(self, content):
+        """
+        Remueve los caracteres repetidos de un contenido
+        """
+        content_tokenized = self.tweet_tokenizer.tokenize(content)
+
+        new_content_tokenized = []
+        for word in content_tokenized:
+            new_word = self.remove_repeated_word(word)
+            new_content_tokenized.append(new_word)
+
+        new_content = " ".join(new_content_tokenized)
+
+        return new_content
 
     def reduce_laught_expression(self, word):
         """
@@ -125,48 +171,29 @@ class PreprocessingTweet():
 
         return word
 
-    def change_to_risas(self, word):
+    def change_to_risas(self, content):
         """
         Las expresiones que denotan risas por ejemplo "jajaja", "jejeje" entre
         otras son reemplazadas por la palabra "risas".
-        """
-        # Convertimos la expresion de risas a su "menor" forma:
-        # Por ejemplo: "jajajajaja" --> "ja"
-        reduce_laught = self.reduce_laught_expression(word)
-
-        # Si la expresion esta en el conjunto de expresiones de risas,
-        # reemplazamos la palabra por "risas" sino devolvemos la palabra que
-        # se recibio de entrada
-        laught_expression = {"ja", "je", "ji", "jo", "ju", "ah", "ha", "hu"}
-        if reduce_laught in laught_expression:
-            return "risas"
-        else:
-            return reduce_laught
-
-    def change_pos_neg_words_emojis(self, content):
-        """
-        Reemplaza todas las palabras positivas y negativas presentes en los
-        conjuntos "self.positive_words" y "self.negative_words" por las
-        palabras "positiveword" y "negativeword" respectivamente.
-
-        Reemplaza todas los emoticones positivos y negativos presentes en los
-        conjuntos "positive_emoticons" y "negative_emoticons" por las
-        palabras "positiveemoticon" y "negativeemoticon" respectivamente.
         """
         content_tokenized = self.tweet_tokenizer.tokenize(content)
 
         new_content_tokenized = []
         for word in content_tokenized:
-            if word in self.positive_words:
-                word = "positiveword"
-            elif word in self.negative_words:
-                word = "negativeword"
-            elif word in positive_emoticons:
-                word = "positiveemoticon"
-            elif word in negative_emoticons:
-                word = "negativeemoticon"
+            # Convertimos la expresion de risas a su "menor" forma:
+            # Por ejemplo: "jajajajaja" --> "ja"
+            reduce_laught = self.reduce_laught_expression(word)
 
-            new_content_tokenized.append(word)
+            # Si la expresion esta en el conjunto de expresiones de risas,
+            # reemplazamos la palabra por "risas" sino devolvemos la palabra
+            # que se recibio de entrada
+            laught_expression = {"ja", "je", "ji", "jo", "ju", "ah", "ha"}
+            if reduce_laught in laught_expression:
+                new_word = "risas"
+            else:
+                new_word = reduce_laught
+
+            new_content_tokenized.append(new_word)
 
         new_content = " ".join(new_content_tokenized)
 

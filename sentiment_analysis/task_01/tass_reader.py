@@ -30,11 +30,9 @@ class CorpusTASSReader():
             if is_corpus_tagged:
                 sentiment = tweet.find('sentiment')
                 polarity = sentiment[0].find('value').text
-                polarity = self.polarity_tagging(polarity)  # Polaridad
             # Si no, la polaridad es "NONE"
             else:
                 polarity = "NONE"  # tweets sin polaridad => Polaridad = "NONE"
-                polarity = self.polarity_tagging(polarity)
 
             # El tweet debe tener contenido para poder analizar su polaridad
             if content is not None:
@@ -43,18 +41,6 @@ class CorpusTASSReader():
                 self.tweets_polarity.append(polarity)
 
         assert len(self.tweets_content) == len(self.tweets_polarity)
-
-    def polarity_tagging(self, polarity):
-        """
-        Taggea un tweet segun su polaridad:
-            * NONE = 0
-            * N = 1
-            * NEU = 2
-            * P = 3
-        """
-        polarity_tag = {'NONE': 0, 'N': 1, 'NEU': 2, 'P': 3}
-
-        return polarity_tag.get(polarity, None)
 
     def get_tweets_id(self):
         """

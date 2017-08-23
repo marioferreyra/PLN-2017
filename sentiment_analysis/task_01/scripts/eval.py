@@ -69,27 +69,27 @@ def get_f1(precision, recall):
     return result
 
 
-def heuristic_classification(classified_tweets, classified_tweets_emoticons):
+def heuristic_classification(polarity_model, polarity_emo):
     """
     La polaridad se define por la siguiente regla:
      * Usamos como preclasificacion a la dada por el uso de los emoticones.
      * Mantenemos la polaridad predefida si el tweet es marcado como "P" o "N"
        de lo contrario tomamos el valor estimado por el clasificador.
     """
-    assert len(classified_tweets) == len(classified_tweets_emoticons)
+    assert len(polarity_model) == len(polarity_emo)
 
-    classified_heuristic_rule = []
-    for tw_c, tw_e in zip(classified_tweets, classified_tweets_emoticons):
+    polarity_heuristic = []
+    for tw_m, tw_e in zip(polarity_model, polarity_emo):
         # Clasificacion usando emoticones es "N" o "P"
-        if tw_e in {1, 3}:
-            classified_heuristic_rule.append(tw_e)
+        if tw_e in {"N", "P"}:
+            polarity_heuristic.append(tw_e)
         # Clasificacion usando emoticones es "NONE" o "NEU"
         else:
-            classified_heuristic_rule.append(tw_c)
+            polarity_heuristic.append(tw_m)
 
-    assert len(classified_heuristic_rule) == len(classified_tweets)
+    assert len(polarity_heuristic) == len(polarity_model)
 
-    return classified_heuristic_rule
+    return polarity_heuristic
 
 
 def print_results(polarity_model, polarity_gold):
@@ -100,16 +100,45 @@ def print_results(polarity_model, polarity_gold):
 
     print("| Polaridad | Cantidad de Tweets |")
     print("|:---------:|:------------------:|")
-    print("| {:^9} | {:^18} |".format("NONE", counter_results.get(0, 0)))
-    print("| {:^9} | {:^18} |".format("N", counter_results.get(1, 0)))
-    print("| {:^9} | {:^18} |".format("NEU", counter_results.get(2, 0)))
-    print("| {:^9} | {:^18} |".format("P", counter_results.get(3, 0)))
+    print("| {:^9} | {:^18} |".format("NONE", counter_results.get("NONE", 0)))
+    print("| {:^9} | {:^18} |".format("N", counter_results.get("N", 0)))
+    print("| {:^9} | {:^18} |".format("NEU", counter_results.get("NEU", 0)))
+    print("| {:^9} | {:^18} |".format("P", counter_results.get("P", 0)))
 
-    accuracy = get_accuracy(polarity_model, polarity_gold)
+    labels = 'NONE N NEU P'.split()
+    cm = confusion_matrix(polarity_gold, polarity_model, labels=labels)
 
-    print("")
-    print("* Accuracy = {}%".format(round(accuracy * 100, 2)))
-    print("")
+    # per-label precision, recall and F1
+    precs, recs = [], []
+    for i, label in enumerate(labels):
+        print('Sentiment {}:'.format(label))
+        hits = cm[i, i]
+        total_pred = cm[:, i].sum()  # i-th column
+        total_true = cm[i, :].sum()  # i-th row
+        if total_pred > 0.0:
+            prec = float(hits) / total_pred * 100.0
+        else:
+            prec = 0.0
+        if total_true > 0.0:
+            rec = float(hits) / total_true * 100.0
+        else:
+            rec = 0.0
+        print('\tPrecision: {:2.2f}% ({}/{})'.format(prec, hits, total_pred))
+        print('\tRecall: {:2.2f}% ({}/{})'.format(rec, hits, total_true))
+        print('\tF1: {:2.2f}%'.format(get_f1(prec, rec)))
+
+        precs.append(prec)
+        recs.append(rec)
+
+    hits = cm.diagonal().sum()  # also m.trace()
+    total = cm.sum()
+    acc = float(hits) / total * 100.0
+    macro_prec = sum(precs) / len(precs)
+    macro_rec = sum(recs) / len(recs)
+    print('Accuracy: {:2.2f}% ({}/{})'.format(acc, hits, total))
+    print('Macro-Precision: {:2.2f}%'.format(macro_prec))
+    print('Macro-Recall: {:2.2f}%'.format(macro_rec))
+    print('Macro-F1: {:2.2f}%'.format(get_f1(macro_prec, macro_rec)))
 
 
 def create_file_result(filename, list_id, list_polarity):
@@ -120,14 +149,12 @@ def create_file_result(filename, list_id, list_polarity):
     """
     assert len(list_id) == len(list_polarity)
 
-    decode_polarity = {0: 'NONE', 1: 'N', 2: 'NEU', 3: 'P'}
     directory_direction = "/home/mario/Escritorio/PLN-2017/sentiment_analysis\
 /task_01/Results/"
     path = directory_direction + filename + ".txt"
     f = open(path, "w")
 
     for my_id, my_polarity in zip(list_id, list_polarity):
-        my_polarity = decode_polarity.get(my_polarity, None)
         f.write(str(my_id) + "\t" + my_polarity + "\n")
 
     f.close()
@@ -174,12 +201,12 @@ if __name__ == '__main__':
 
     # ===========================================
     # Evaluacion usando emoticones y clasificador
-    # classified_heuristic = heuristic_classification(polarity_model,
+    # polarity_heuristic = heuristic_classification(polarity_model,
     #                                                 polarity_emo)
-    # accuracy_heuristic = accuracy_score(classified_heuristic, polarity_gold)
+    # accuracy_heuristic = accuracy_score(polarity_heuristic, polarity_gold)
 
     # print("\n##### Clasificación en base a Heuristica")
-    # print_results(Counter(classified_heuristic), accuracy_heuristic)
+    # print_results(Counter(polarity_heuristic), accuracy_heuristic)
 
     # # ===================================================
     # # Creamos archivo con los resultados del clasificador
