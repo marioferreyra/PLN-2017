@@ -1,12 +1,13 @@
 """
-Evaluate a model with a list of tweets.
+Evaluate a Sentiment Analysis model.
 
 Usage:
-  eval.py -i <file>
+  eval.py -i <file> [-r <rst>]
   eval.py -h | --help
 
 Options:
   -i <file>     Tagging model file.
+  -r <rst>      Name for file with results
   -h --help     Show this screen.
 """
 import pickle
@@ -186,29 +187,27 @@ if __name__ == '__main__':
 
     # ============================
     # Preclasificacion usando Emoticones
-    # polarity_emo = model.emoticons_classify(tweets_content)
-    # accuracy_emoticons = accuracy_score(polarity_emo, polarity_gold)
-
+    polarity_emo = model.emoticons_classify(tweets_content)
     # print("\n### Preclasificación usando Emoticones")
-    # print_results(Counter(polarity_emo), accuracy_emoticons)
+    # print_results(polarity_emo, polarity_gold)
 
     # ==============================
     # Evaluacion usando clasificador
     polarity_model = model.classify_tweets(tweets_content)
-    print("\n### Vectorizador *\"{}\"* y Clasificador *\"{}\"*".format(n_vec,
-                                                                       n_clas))
+    print("\n### Clasificación usando:")
+    print("### Vectorizador *\"{}\"* y Clasificador *\"{}\"*".format(n_vec,
+                                                                     n_clas))
     print_results(polarity_model, polarity_gold)
 
     # ===========================================
     # Evaluacion usando emoticones y clasificador
-    # polarity_heuristic = heuristic_classification(polarity_model,
-    #                                                 polarity_emo)
-    # accuracy_heuristic = accuracy_score(polarity_heuristic, polarity_gold)
+    polarity_heuristic = heuristic_classification(polarity_model, polarity_emo)
 
-    # print("\n##### Clasificación en base a Heuristica")
-    # print_results(Counter(polarity_heuristic), accuracy_heuristic)
+    print("\n##### Clasificación en base a Heuristica")
+    print_results(polarity_heuristic, polarity_gold)
 
     # # ===================================================
-    # # Creamos archivo con los resultados del clasificador
-    # r = opts['-r']
-    # create_file_result(r, tweets_id, polarity_model)
+    # Creamos archivo con los resultados del clasificador
+    r = opts['-r']
+    if r is not None:
+        create_file_result(r, tweets_id, polarity_model)

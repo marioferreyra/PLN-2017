@@ -1,5 +1,5 @@
 """
-Train a model with a list of tweets.
+Train a Sentiment Analysis model.
 
 Usage:
   train.py [-v <vec>] [-c <clf>] -o <file>

@@ -21,8 +21,11 @@ class PreprocessingTweet():
         # Tokenizador de tweets
         self.tweet_tokenizer = TweetTokenizer()
 
+        # len(positive_words) = 2509
         self.positive_words = self.load_ISOL_words("isol",
                                                    "positivas_mejorada.csv")
+
+        # len(negative_words) = 5626
         self.negative_words = self.load_ISOL_words("isol",
                                                    "negativas_mejorada.csv")
 
@@ -144,7 +147,7 @@ class PreprocessingTweet():
 
     def remove_repeated(self, content):
         """
-        Remueve los caracteres repetidos de un contenido
+        Remueve los caracteres repetidos de un contenido.
         """
         content_tokenized = self.tweet_tokenizer.tokenize(content)
 
