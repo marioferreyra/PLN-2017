@@ -194,17 +194,17 @@ if __name__ == '__main__':
     # ==============================
     # Evaluacion usando clasificador
     polarity_model = model.classify_tweets(tweets_content)
-    print("\n### Clasificación usando:")
-    print("### Vectorizador *\"{}\"* y Clasificador *\"{}\"*".format(n_vec,
-                                                                     n_clas))
+    # print("\n### Clasificación usando:")
+    print("\n### Vectorizador *\"{}\"* y Clasificador *\"{}\"*".format(n_vec,
+                                                                       n_clas))
     print_results(polarity_model, polarity_gold)
 
     # ===========================================
     # Evaluacion usando emoticones y clasificador
     polarity_heuristic = heuristic_classification(polarity_model, polarity_emo)
 
-    print("\n##### Clasificación en base a Heuristica")
-    print_results(polarity_heuristic, polarity_gold)
+    # print("\n##### Clasificación en base a Heuristica")
+    # print_results(polarity_heuristic, polarity_gold)
 
     # # ===================================================
     # Creamos archivo con los resultados del clasificador

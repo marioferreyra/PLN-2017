@@ -202,18 +202,6 @@ class PreprocessingTweet():
 
         return new_content
 
-    def remove_stopwords(self, content_list):
-        """
-        Removemos de una lista de palabras, aquellas que son muy frecuentes
-        pero que no aportan gran valor sintáctico, es decir las stopwords.
-        """
-        important_words = []
-        for word in content_list:
-            if word not in self.spanish_stopwords:
-                important_words.append(word)
-
-        return important_words
-
     def tweet_stemming(self, content_list):
         """
         Dada una lista de palabras, a cada una de ellas se le realiza el

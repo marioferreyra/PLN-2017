@@ -1,5 +1,6 @@
 from sentiment_analysis.task_01.preprocessing import PreprocessingTweet
 
+# Tokenizador de Tweets
 from nltk.tokenize import TweetTokenizer
 
 # Vectorizadores
@@ -113,7 +114,6 @@ class TwitterPolarity:
         tw = self.preprocessing.remove_repeated(tw)
         tw = self.preprocessing.change_to_risas(tw)
         tw = self.tweet_tokenizer.tokenize(tw)
-        tw = self.preprocessing.remove_stopwords(tw)
         tw = self.preprocessing.tweet_stemming(tw)
 
         return tw
