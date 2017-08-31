@@ -13,8 +13,10 @@ Options:
 import pickle
 from docopt import docopt
 from sentiment_analysis.task_01.tass_reader import CorpusTASSReader
-from collections import Counter
+from collections import Counter, defaultdict
 from sklearn.metrics import confusion_matrix
+# Mirar "Enlaces externos" de:
+# https://es.wikipedia.org/wiki/Matriz_de_confusi%C3%B3n
 
 
 def get_accuracy(polarity_model, polarity_gold):
@@ -52,7 +54,7 @@ def get_recall(hits, polarity_gold):
     """
     Calcula la Recall.
     """
-    return hits / polarity_model
+    return hits / polarity_gold
 
 
 def get_f1(precision, recall):
@@ -97,49 +99,59 @@ def print_results(polarity_model, polarity_gold):
     """
     Imprime los resutados obtenidos.
     """
+    dict_pol = defaultdict(tuple)
     counter_results = Counter(polarity_model)
-
-    print("| Polaridad | Cantidad de Tweets |")
-    print("|:---------:|:------------------:|")
-    print("| {:^9} | {:^18} |".format("NONE", counter_results.get("NONE", 0)))
-    print("| {:^9} | {:^18} |".format("N", counter_results.get("N", 0)))
-    print("| {:^9} | {:^18} |".format("NEU", counter_results.get("NEU", 0)))
-    print("| {:^9} | {:^18} |".format("P", counter_results.get("P", 0)))
 
     labels = 'NONE N NEU P'.split()
     cm = confusion_matrix(polarity_gold, polarity_model, labels=labels)
 
     # per-label precision, recall and F1
     precs, recs = [], []
-    for i, label in enumerate(labels):
-        print('Sentiment {}:'.format(label))
+    for i, label in enumerate(labels):  # [(0, NONE), (1, N), (2, NEU), (3, P)]
         hits = cm[i, i]
         total_pred = cm[:, i].sum()  # i-th column
         total_true = cm[i, :].sum()  # i-th row
-        if total_pred > 0.0:
-            prec = float(hits) / total_pred * 100.0
-        else:
-            prec = 0.0
-        if total_true > 0.0:
-            rec = float(hits) / total_true * 100.0
-        else:
-            rec = 0.0
-        print('\tPrecision: {:2.2f}% ({}/{})'.format(prec, hits, total_pred))
-        print('\tRecall: {:2.2f}% ({}/{})'.format(rec, hits, total_true))
-        print('\tF1: {:2.2f}%'.format(get_f1(prec, rec)))
+        prec = get_precision(hits, total_pred) * 100.0
+        rec = get_recall(hits, total_true) * 100.0
+        f1 = get_f1(prec, rec)
+        dict_pol[label] += (hits, total_pred, total_true, prec, rec, f1)
 
         precs.append(prec)
         recs.append(rec)
 
+    print('')
+    print("| {} | {} | {:^16} | {:^16} | {:^6} |".format("Polaridad",
+                                                         "Cantidad de Tweets",
+                                                         "Precision",
+                                                         "Recall",
+                                                         "F1"))
+    print("|:---------:|:------------------:|:----------------:|:-------------\
+---:|:------:|")
+    for polarity in labels:  # [NONE, N, NEU, P]
+            print("| {:^9} | {:^18} | {:2.2f}% ({:^3}/{:^3}) \
+| {:2.2f}% ({:^3}/{:^3}) | {:2.2f}% |".format(polarity,
+                                              counter_results.get(polarity, 0),
+                                              dict_pol[polarity][3],  # prec
+                                              dict_pol[polarity][0],  # hits
+                                              dict_pol[polarity][1],  # t_pred
+                                              dict_pol[polarity][4],  # rec
+                                              dict_pol[polarity][0],  # hits
+                                              dict_pol[polarity][2],  # t_true
+                                              dict_pol[polarity][5]))  # f1
+
     hits = cm.diagonal().sum()  # also m.trace()
     total = cm.sum()
+
     acc = float(hits) / total * 100.0
     macro_prec = sum(precs) / len(precs)
     macro_rec = sum(recs) / len(recs)
+    macro_f1 = get_f1(macro_prec, macro_rec)
+
+    print('')
     print('Accuracy: {:2.2f}% ({}/{})'.format(acc, hits, total))
     print('Macro-Precision: {:2.2f}%'.format(macro_prec))
     print('Macro-Recall: {:2.2f}%'.format(macro_rec))
-    print('Macro-F1: {:2.2f}%'.format(get_f1(macro_prec, macro_rec)))
+    print('Macro-F1: {:2.2f}%'.format(macro_f1))
 
 
 def create_file_result(filename, list_id, list_polarity):
