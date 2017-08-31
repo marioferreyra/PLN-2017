@@ -1,7 +1,7 @@
 
-
 def unlexicalize(t):
-    """Unlexicalize a tree. Overwrites the terminals with the pre-terminals.
+    """
+    Unlexicalize a tree. Overwrites the terminals with the pre-terminals.
 
     t -- the tree.
     """
@@ -13,7 +13,8 @@ def unlexicalize(t):
 
 
 def lexicalize(t, sent):
-    """Lexicalize a tree using a sentence. Replaces the terminals with the words
+    """
+    Lexicalize a tree using a sentence. Replaces the terminals with the words
     in the sentence.
 
     t -- the tree.
@@ -26,7 +27,8 @@ def lexicalize(t, sent):
 
 
 def spans(t, unary=False):
-    """Return the list of spans of a tree, each span being a triple (n, i, j),
+    """
+    Return the list of spans of a tree, each span being a triple (n, i, j),
     where n is the non-terminal and (i, j) is the sentence interval.
 
     t -- the tree.

@@ -4,6 +4,7 @@ from math import log2
 
 from nltk.tree import Tree
 from nltk.grammar import PCFG
+# from nltk.draw import draw_trees
 
 from parsing.cky_parser import CKYParser
 
@@ -53,9 +54,10 @@ class TestCKYParser(TestCase):
                      log2(0.6 * 1.0 * 0.9) +  # left part
                      log2(1.0) + log2(1.0) + log2(0.4 * 0.1 * 1.0)},  # right part
         }
+
         self.assertEqualPi(parser._pi, pi)
 
-        # check partial results
+        # # check partial results
         bp = {
             (1, 1): {'Det': Tree.fromstring("(Det el)")},
             (2, 2): {'Noun': Tree.fromstring("(Noun gato)")},
@@ -109,3 +111,75 @@ class TestCKYParser(TestCase):
                 prob1 = d1[k2]
                 prob2 = d2[k2]
                 self.assertAlmostEqual(prob1, prob2)
+
+    def test_parse_ambiguity(self):
+        # Ejemplo tomado de las paginas 4, 5, 8 de las notas de Michael Collins
+        # Probabilistic Context-Free Grammars (PCFGs)
+        grammar = PCFG.fromstring(
+            """
+                S -> NP VP              [1.0]
+
+                VP -> Vt NP             [0.65]
+                VP -> VP PP             [0.35]
+
+                NP -> DT NN             [0.8]
+                NP -> NP PP             [0.2]
+
+                PP -> IN NP             [1.0]
+
+                Vt -> saw               [1.0]
+
+                NN -> man               [0.2]
+                NN -> telescope         [0.3]
+                NN -> dog               [0.5]
+
+                DT -> the               [1.0]
+
+                IN -> with              [1.0]
+            """)
+
+        # Cambiando esto:
+        # VP -> Vt NP             [0.85]
+        # VP -> VP PP             [0.15]
+        # Obtengo el otro arbol
+
+        parser = CKYParser(grammar)
+
+        lp, t = parser.parse('the man saw the dog with the telescope'.split())
+
+        # draw_trees(t)
+
+        # check tree
+        t2 = Tree.fromstring(
+                """
+                    (S
+                        (NP
+                            (DT the)
+                            (NN man)
+                        )
+                        (VP
+                            (VP
+                                (Vt saw)
+                                (NP
+                                    (DT the)
+                                    (NN dog)
+                                )
+                            )
+                            (PP
+                                (IN with)
+                                (NP
+                                    (DT the)
+                                    (NN telescope)
+                                )
+                            )
+                        )
+                    )
+                """)
+
+        self.assertEqual(t, t2)
+
+        # check log probability
+        lp2 = log2(1.0 * 0.8 * 1.0 * 0.2 * 0.35 * 0.65 * 1.0 * 0.8 * 1.0 *
+                   0.5 * 1.0 * 1.0 * 0.8 * 1.0 * 0.3)
+
+        self.assertAlmostEqual(lp, lp2)

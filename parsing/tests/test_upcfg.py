@@ -19,7 +19,7 @@ class TestUPCFG(TestCase):
             """)
         t2 = t.copy(deep=True)
 
-        model = UPCFG([t])
+        model = UPCFG([t], start='S')
 
         self.assertEqual(t, t2)
 
@@ -32,7 +32,7 @@ class TestUPCFG(TestCase):
                 )
             """)
 
-        model = UPCFG([t])
+        model = UPCFG([t], start='S')
 
         prods = model.productions()
 
