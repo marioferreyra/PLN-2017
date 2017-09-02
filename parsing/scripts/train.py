@@ -36,7 +36,7 @@ if __name__ == '__main__':
     opts = docopt(__doc__)
 
     print('Loading corpus ...')
-    PATH = "/home/mario/Escritorio/ancora-3.0.1es"
+    PATH = "./../../ancora-3.0.1es"
     files = 'CESS-CAST-(A|AA|P)/.*\.tbf\.xml'
     corpus = SimpleAncoraCorpusReader(PATH, files)
 

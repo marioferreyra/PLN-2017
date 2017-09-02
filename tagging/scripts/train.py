@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     # Load the data
     files = 'CESS-CAST-(A|AA|P)/.*\.tbf\.xml'
-    PATH = "/home/mario/Escritorio/ancora-3.0.1es"
+    PATH = "./../../ancora-3.0.1es"
     corpus = SimpleAncoraCorpusReader(PATH, files)
     sents = list(corpus.tagged_sents())
 

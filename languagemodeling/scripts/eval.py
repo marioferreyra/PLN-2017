@@ -38,7 +38,7 @@ if __name__ == '__main__':
         | [][.,;"'?():-_`]  # these are separate tokens; includes ]
     '''
 
-    PATH = "/home/mario/Escritorio/Corpus"  # Ubicacion del archivo
+    PATH = "./../../Corpus_Language_Modeling"  # Ubicacion del archivo
     FILENAME = "corpus_test.txt"  # Nombre del archivo
 
     # Load the data

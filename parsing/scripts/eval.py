@@ -64,7 +64,7 @@ if __name__ == '__main__':
     f.close()
 
     print('Loading corpus ...')
-    PATH = "/home/mario/Escritorio/ancora-3.0.1es"
+    PATH = "./../../ancora-3.0.1es"
     files = '3LB-CAST/.*\.tbf\.xml'
     corpus = SimpleAncoraCorpusReader(PATH, files)
     parsed_sents = list(corpus.parsed_sents())

@@ -17,7 +17,7 @@ if __name__ == '__main__':
     opts = docopt(__doc__)
 
     # Cargamos el Ancora
-    PATH = "/home/mario/Escritorio/ancora-3.0.1es"
+    PATH = "./../../ancora-3.0.1es"
     corpus = SimpleAncoraCorpusReader(PATH)
     sents = list(corpus.tagged_sents())
 
