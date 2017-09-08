@@ -40,7 +40,7 @@ class TwitterPolarity:
         self.positive_emoticons = self.preprocessing.get_positive_emoticons()
 
         # Emoticones Negativos
-        self.negative_emoticons = self.preprocessing.get_positive_emoticons()
+        self.negative_emoticons = self.preprocessing.get_negative_emoticons()
 
         # Stopwords del español
         self.spanish_stopwords = self.preprocessing.get_spanish_stopwords()
