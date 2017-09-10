@@ -7,8 +7,7 @@ from nltk.stem import SnowballStemmer
 from nltk.tokenize import TweetTokenizer
 
 # Emoticones Positivos y Negativos
-from sentiment_analysis.task_01.emoticons import positive_emoticons
-from sentiment_analysis.task_01.emoticons import negative_emoticons
+from sentiment_analysis.emoticons import positive_emoticons, negative_emoticons
 
 
 class PreprocessingTweet():

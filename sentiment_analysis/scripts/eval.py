@@ -12,7 +12,7 @@ Options:
 """
 import pickle
 from docopt import docopt
-from sentiment_analysis.task_01.tass_reader import CorpusTASSReader
+from sentiment_analysis.tass_reader import CorpusTASSReader
 from collections import Counter, defaultdict
 from sklearn.metrics import confusion_matrix
 # Mirar "Enlaces externos" de:
@@ -162,15 +162,12 @@ def create_file_result(filename, list_id, list_polarity):
     """
     assert len(list_id) == len(list_polarity)
 
-    directory_direction = "/home/mario/Escritorio/PLN-2017/sentiment_analysis\
-/task_01/Results/"
-    path = directory_direction + filename + ".txt"
-    f = open(path, "w")
+    directory = "/home/mario/Escritorio/PLN-2017/sentiment_analysis/Results/"
+    path = directory + filename + ".txt"
 
-    for my_id, my_polarity in zip(list_id, list_polarity):
-        f.write(str(my_id) + "\t" + my_polarity + "\n")
-
-    f.close()
+    with open(path, 'w') as f:
+        for my_id, my_polarity in zip(list_id, list_polarity):
+            f.write(str(my_id) + "\t" + my_polarity + "\n")
 
 
 if __name__ == '__main__':
@@ -187,12 +184,14 @@ if __name__ == '__main__':
     n_vec, n_clas = model.get_names_vectorizer_classifier()
 
     # Cargamos los Tweets del Corpus Development
-    path = "/home/mario/Escritorio/PLN-2017/sentiment_analysis/task_01/Corpus"
+    path = "/home/mario/Escritorio/PLN-2017/sentiment_analysis/Corpus"
     file = "TASS2017_T1_development.xml"
     corpus_reader = CorpusTASSReader(path, file, is_corpus_tagged=True)
     tweets_id = corpus_reader.get_tweets_id()
     tweets_content = corpus_reader.get_tweets_content()
     polarity_gold = corpus_reader.get_tweets_polarity()
+
+    counter_gold = Counter(polarity_gold)  # Polaridades Golden
 
     # Cantidad de tweets que se van a clasificar
     print("* Tweets analizados: {}".format(len(tweets_content)))

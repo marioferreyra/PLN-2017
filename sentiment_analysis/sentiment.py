@@ -1,11 +1,10 @@
-from sentiment_analysis.task_01.preprocessing import PreprocessingTweet
+from sentiment_analysis.preprocessing import PreprocessingTweet
 
 # Tokenizador de Tweets
 from nltk.tokenize import TweetTokenizer
 
 # Vectorizadores
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 # Clasificadores
 from sklearn.svm import LinearSVC
