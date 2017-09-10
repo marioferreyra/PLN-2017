@@ -160,12 +160,16 @@ Se analizaron un total de **506 Tweets**.
 * Macro-Recall: 34.40%
 * Macro-F1: 34.33%
 
+
+##### [Filminas de la Presentación de Sentiment Analysis]
+
 <!-- ###################################################################### -->
 
 [Corpus]: http://www.sepln.org/workshops/tass/2017/#datasets
 [TASS-2017]: http://www.sepln.org/workshops/tass/2017/
 [Papers de la TASS-2016]: http://ceur-ws.org/Vol-1702/
 [NLTK]: http://www.nltk.org/
+[Filminas de la Presentación de Sentiment Analysis]: https://github.com/marioferreyra/PLN-2017/blob/practico04/sentiment_analysis/filminas_sentiment_analysis_pln.pdf
 
 <!-- Vectorizadores -->
 
