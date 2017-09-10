@@ -25,7 +25,8 @@ from sentiment_analysis.sentiment import TwitterPolarity
 if __name__ == '__main__':
     opts = docopt(__doc__)
 
-    path = "/home/mario/Escritorio/PLN-2017/sentiment_analysis/Corpus"
+    path = "/home/mario/Documentos/FaMAF/Optativas/PLN-2017/sentiment_analysis\
+/Corpus"
     file = "tw_faces4tassTrain1000rc.xml"
     corpus_reader = CorpusTASSReader(path, file, is_corpus_tagged=True)
     tweets_content = corpus_reader.get_tweets_content()

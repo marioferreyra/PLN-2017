@@ -162,7 +162,8 @@ def create_file_result(filename, list_id, list_polarity):
     """
     assert len(list_id) == len(list_polarity)
 
-    directory = "/home/mario/Escritorio/PLN-2017/sentiment_analysis/Results/"
+    directory = "/home/mario/Documentos/FaMAF/Optativas/PLN-2017/\
+sentiment_analysis/Results/"
     path = directory + filename + ".txt"
 
     with open(path, 'w') as f:
@@ -184,7 +185,8 @@ if __name__ == '__main__':
     n_vec, n_clas = model.get_names_vectorizer_classifier()
 
     # Cargamos los Tweets del Corpus Development
-    path = "/home/mario/Escritorio/PLN-2017/sentiment_analysis/Corpus"
+    path = "/home/mario/Documentos/FaMAF/Optativas/PLN-2017/sentiment_analysis\
+/Corpus"
     file = "TASS2017_T1_development.xml"
     corpus_reader = CorpusTASSReader(path, file, is_corpus_tagged=True)
     tweets_id = corpus_reader.get_tweets_id()

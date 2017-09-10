@@ -44,6 +44,7 @@ class PreprocessingTweet():
 
             for row in reader_csv:
                 # word = row[0]
+                # 'row[0]' porque 'row' es una lista con la palabra
                 word = self.delete_tildes(row[0])
                 word_set.add(word)
 
