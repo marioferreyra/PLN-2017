@@ -14,8 +14,10 @@ class PreprocessingTweet():
 
     def __init__(self):
         # Stopwords del español
+        # Descargar las stopwords en una consola de Python, haciendo:
+        # >>> import nltk
+        # >>> nltk.download()
         self.spanish_stopwords = stopwords.words('spanish')
-        # Descargar las stopwords usando el comando nltk.download()
 
         # Tokenizador de tweets
         self.tweet_tokenizer = TweetTokenizer()
