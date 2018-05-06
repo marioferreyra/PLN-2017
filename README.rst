@@ -27,11 +27,14 @@ Instalación
 
    Y luego agregando la siguiente línea al final del archivo ``.bashrc``::
 
+    export WORKON_HOME=$HOME/.virtualenvs
+    export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python
+    export VIRTUALENVWRAPPER_VIRTUALENV=/usr/local/bin/virtualenv
     [[ -s "/usr/local/bin/virtualenvwrapper.sh" ]] && source "/usr/local/bin/virtualenvwrapper.sh"
 
    Para crear y activar nuestro virtualenv::
 
-    mkvirtualenv --system-site-packages --python=/usr/bin/python3 pln-2017
+    mkvirtualenv --python=/usr/bin/python3 pln-2017
 
 3. Bajar el código::
 
